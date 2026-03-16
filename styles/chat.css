@@ -1,0 +1,139 @@
+.chat-list {
+  min-height: 220px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.chat-room-list {
+  display: grid;
+  gap: 8px;
+}
+
+.chat-room-item {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #fff1d9;
+  color: #8a6416;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.chat-room-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.chat-room-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.chat-room-top small {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.chat-preview {
+  color: var(--muted);
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-detail-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-back {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: #fff;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.chat-thread {
+  min-height: 280px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.chat-bubble-wrap {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.chat-bubble-wrap.self {
+  justify-content: flex-end;
+}
+
+.chat-bubble-wrap.other {
+  justify-content: flex-start;
+}
+
+.chat-bubble {
+  max-width: 75%;
+  border-radius: 14px;
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.chat-bubble.self {
+  background: #eaf1ff;
+  border: 1px solid #cddcfb;
+}
+
+.chat-bubble.other {
+  background: #fff8eb;
+  border: 1px solid #f4debd;
+}
+
+.chat-bubble small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.chat-item {
+  border: 1px solid #ebdfd0;
+  border-radius: 12px;
+  background: #fffdfa;
+  padding: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.file-link {
+  color: var(--provider);
+  text-decoration: none;
+  font-weight: 700;
+}

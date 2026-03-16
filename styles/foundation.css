@@ -1,0 +1,61 @@
+:root {
+  --bg: #fffdf7;
+  --card: #ffffff;
+  --text: #433d3d;
+  --muted: #7d7676;
+  --h1-size: 1.5rem;
+  --h2-size: 1.1rem;
+  --kitchen: #f06e6e;
+  --provider: #5b8def;
+  --line: #eadfce;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #fff2e3, #fffdf7 45%);
+  color: var(--text);
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+}
+
+.app, .login {
+  width: min(430px, 100%);
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding: 16px 14px 88px;
+}
+
+.login {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: var(--h1-size); }
+h2 { font-size: var(--h2-size); }
+.sub { color: var(--muted); font-size: 0.9rem; }
+
+label { display: flex; flex-direction: column; gap: 6px; font-size: 0.92rem; }
+input, select, textarea, button {
+  font: inherit;
+}
+input, select, textarea {
+  width: 100%;
+  border: 1px solid #decebd;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fffdfa;
+}
+textarea { resize: vertical; }
+
+button {
+  border: none;
+  border-radius: 999px;
+  padding: 11px;
+  cursor: pointer;
+}
+
+.hidden { display: none !important; }
