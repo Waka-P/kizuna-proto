@@ -38,7 +38,7 @@ h1 { font-size: var(--h1-size); }
 h2 { font-size: var(--h2-size); }
 .sub { color: var(--muted); font-size: 0.9rem; }
 
-label { display: flex; flex-direction: column; gap: 6px; font-size: 0.92rem; }
+label { display: flex; flex-direction: column; gap: 2px; flex: 1; font-size: 0.92rem; }
 input, select, textarea, button {
   font: inherit;
 }

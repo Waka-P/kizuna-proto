@@ -1,7 +1,7 @@
 (() => {
 const STORAGE_KEY = "kizuna_proto_state_v1";
 const USER_KEY = "kizuna_proto_user_v1";
-const CATEGORIES = ["米", "野菜", "肉魚", "お菓子", "備品", "その他"];
+const CATEGORIES = ["食料", "飲料", "衣服", "備品", "その他"];
 
 const defaultState = {
   needs: [],
@@ -75,6 +75,49 @@ function formatDate(value) {
   });
 }
 
+function extractPositiveInteger(value) {
+  const raw = String(value || "").trim();
+  const match = raw.match(/\d+/);
+  if (!match) return null;
+  const amount = Number.parseInt(match[0], 10);
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+  return amount;
+}
+
+function getItemDisplayName(item) {
+  if (!item) return "";
+  return String(item.itemName || item.title || "").trim();
+}
+
+function getItemQuantityNumber(item) {
+  if (!item) return null;
+
+  const directNumber = Number.parseInt(String(item.quantityAmount ?? "").trim(), 10);
+  if (Number.isFinite(directNumber) && directNumber > 0) {
+    return directNumber;
+  }
+
+  return extractPositiveInteger(item.quantity);
+}
+
+function getItemQuantityUnit(item) {
+  if (!item) return "";
+  const directUnit = String(item.quantityUnit || "").trim();
+  if (directUnit) return directUnit;
+
+  const legacy = String(item.quantity || "").trim();
+  const match = legacy.match(/^\s*\d+\s*(.*)$/);
+  return match ? match[1].trim() : "";
+}
+
+function formatItemQuantity(item) {
+  const amount = getItemQuantityNumber(item);
+  if (!amount) return "未指定";
+
+  const unit = getItemQuantityUnit(item);
+  return unit ? `${amount} ${unit}` : String(amount);
+}
+
 function escapeHtml(str) {
   return String(str)
     .replaceAll("&", "&amp;")
@@ -100,7 +143,6 @@ function renderHeaderHtml(user, title) {
     <header class="header-row">
       <div>
         <h1>${title || "きずな〇〇"}</h1>
-        <p class="sub">こんにちは、${escapeHtml(user.displayName)} さん</p>
       </div>
       <span class="status-badge ${isKitchen ? "kitchen" : "provider"}">${modeText}</span>
     </header>
@@ -154,6 +196,54 @@ function getChatSummaries(state, userName) {
       const bTime = b.lastMessage ? new Date(b.lastMessage.createdAt).getTime() : 0;
       return bTime - aTime;
     });
+}
+
+function getMessagePreviewText(message) {
+  if (!message) return "";
+  if (message.type === "supply_request") {
+    const amount = message.request?.amount;
+    const status = message.request?.status;
+    const statusText = status === "approved" ? "承認済み" : status === "rejected" ? "拒否" : "確認待ち";
+    if (amount) return `提供希望 ${amount} / ${statusText}`;
+    return `提供希望リクエスト / ${statusText}`;
+  }
+  if (message.text) return message.text;
+  if (message.attachment) return "添付ファイル";
+  return "";
+}
+
+function getSupplyReservationSummary(state, supplyItem) {
+  if (!supplyItem || !supplyItem.id) {
+    return {
+      maxCount: null,
+      plannedCount: 0,
+      remainingCount: null,
+      ratioText: "-/-",
+    };
+  }
+
+  const maxCount = getItemQuantityNumber(supplyItem);
+  const plannedCount = (Array.isArray(state?.messages) ? state.messages : []).reduce((sum, message) => {
+    if (message?.type !== "supply_request") return sum;
+    const request = message.request;
+    if (!request) return sum;
+    if (request.postType !== "supply" || request.postId !== supplyItem.id) return sum;
+    if (request.status === "rejected") return sum;
+
+    const amount = extractPositiveInteger(request.amount);
+    if (!amount) return sum;
+    return sum + amount;
+  }, 0);
+
+  const remainingCount = maxCount === null ? null : Math.max(maxCount - plannedCount, 0);
+  const ratioText = maxCount === null ? `${plannedCount}/-` : `${plannedCount}/${maxCount}`;
+
+  return {
+    maxCount,
+    plannedCount,
+    remainingCount,
+    ratioText,
+  };
 }
 
 function openModeSwitchModal({ user, onApply }) {
@@ -225,6 +315,11 @@ window.KizunaShared = {
   clearUser,
   ensureUser,
   formatDate,
+  extractPositiveInteger,
+  getItemDisplayName,
+  getItemQuantityNumber,
+  getItemQuantityUnit,
+  formatItemQuantity,
   escapeHtml,
   readFileAsDataUrl,
   renderHeaderHtml,
@@ -232,6 +327,8 @@ window.KizunaShared = {
   getChatCandidates,
   getDirectMessagesWith,
   getChatSummaries,
+  getMessagePreviewText,
+  getSupplyReservationSummary,
   openModeSwitchModal,
 };
 })();

@@ -30,14 +30,15 @@
 
 .chat-room-back {
   text-decoration: none;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   color: #7b3351;
-  font-size: 1.5rem;
+  font-size: 2.5rem;
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -51,6 +52,7 @@
   position: relative;
   width: fit-content;
   max-width: calc(100% - 40px);
+  margin-top: 0.2rem;
 }
 
 .chat-room-partner {
@@ -175,4 +177,64 @@
 
 .chat-room-shell[data-mode="provider"] .attach-name {
   color: #2d58a8;
+}
+
+.request-card {
+  background: #fff;
+  border: 1px solid #e6d7c6;
+  border-radius: 12px;
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.request-card.status-approved {
+  border-color: #95c89d;
+  background: #f1fff3;
+}
+
+.request-card.status-rejected {
+  border-color: #e4a4a4;
+  background: #fff4f4;
+}
+
+.request-card-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.request-card-line {
+  font-size: 0.82rem;
+}
+
+.request-card-status {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.request-card-actions {
+  margin-top: 4px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.request-action-btn {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 7px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.request-action-btn.approve {
+  color: #27602f;
+  border-color: #95c89d;
+  background: #ebfcec;
+}
+
+.request-action-btn.reject {
+  color: #8f2828;
+  border-color: #e4a4a4;
+  background: #ffeeee;
 }

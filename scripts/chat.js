@@ -4,6 +4,7 @@ const {
   renderHeaderHtml,
   renderBottomNavHtml,
   getChatSummaries,
+  getMessagePreviewText,
   escapeHtml,
   formatDate,
 } = window.KizunaShared;
@@ -33,7 +34,7 @@ if (!summaries.length) {
   listEl.innerHTML = summaries
     .map(({ partnerName, lastMessage }) => {
       const preview = lastMessage
-        ? lastMessage.text || (lastMessage.attachment ? "添付ファイル" : "")
+        ? getMessagePreviewText(lastMessage)
         : "まだメッセージはありません";
 
       return `
