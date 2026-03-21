@@ -7,7 +7,7 @@
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: #fff5fb;
+  background: #fff6f6;
 }
 
 .chat-room-shell[data-mode="provider"] {
@@ -20,7 +20,7 @@
   gap: 10px;
   padding: 14px;
   background: #fff;
-  box-shadow: 0 1px 8px rgba(119, 0, 48, 0.2);
+  box-shadow: 0 1px 8px rgba(176, 68, 68, 0.2);
   z-index: 2;
 }
 
@@ -36,7 +36,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  color: #7b3351;
+  color: #b04444;
   font-size: 2.5rem;
   font-weight: 700;
   line-height: 1;
@@ -59,7 +59,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #7b3351;
+  color: #b04444;
 }
 
 .chat-room-shell[data-mode="provider"] .chat-room-partner {
@@ -79,8 +79,8 @@
 
 .chat-day-separator span {
   font-size: 0.75rem;
-  color: #7b3351;
-  background: #ffd4e5;
+  color: #b04444;
+  background: #ffdede;
   border-radius: 999px;
   padding: 4px 10px;
 }
@@ -124,13 +124,13 @@
 }
 
 .chat-room-shell .chat-bubble.self {
-  background: #ffdeec;
-  border-color: #ffc3db;
+  background: #ffe1e1;
+  border-color: #f5bcbc;
 }
 
 .chat-room-shell .chat-bubble.other {
   background: #fff;
-  border-color: #f0dbe5;
+  border-color: #f1d8d8;
 }
 
 .chat-room-shell[data-mode="provider"] .chat-bubble.self {
@@ -144,8 +144,8 @@
 
 .chat-composer {
   padding: 10px 12px 12px;
-  background: #ffc0dc;
-  box-shadow: 0 -1px 8px rgba(119, 0, 48, 0.2);
+  background: #f7b1b1;
+  box-shadow: 0 -1px 8px rgba(176, 68, 68, 0.2);
 }
 
 .chat-room-shell[data-mode="provider"] .chat-composer {
@@ -173,8 +173,8 @@
   align-items: center;
   justify-content: center;
   font-size: 1rem;
-  background: #fff4fa;
-  color: #7b3351;
+  background: #fff0f0;
+  color: #b04444;
 }
 
 .chat-room-shell[data-mode="provider"] .attach-btn,
@@ -198,7 +198,7 @@
 .attach-name {
   margin: 6px 4px 0;
   font-size: 0.76rem;
-  color: #7b3351;
+  color: #b04444;
 }
 
 .chat-room-shell[data-mode="provider"] .attach-name {
@@ -243,7 +243,7 @@
 .chat-read {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #7b3351;
+  color: #b04444;
 }
 
 .chat-time {

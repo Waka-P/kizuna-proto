@@ -47,16 +47,31 @@ function renderSupplyRequestModalHtml(summary) {
         <h3 id="supplyRequestHeading">必要な数量を送る</h3>
         <p class="sub">残り${escapeHtml(String(remainingAmount))}</p>
         <form id="supplyRequestForm" class="supply-request-form">
-          <label>
+          <label style="text-align: left;">
             必要数量
             <input id="supplyRequestAmount" type="number" min="1" max="${escapeHtml(String(remainingAmount))}" placeholder="1" />
           </label>
           <p id="supplyRequestError" class="error hidden"></p>
           <div class="detail-actions-row">
-            <button type="submit" class="btn kitchen-bg">送信する</button>
-            <button type="button" id="closeSupplyRequestBtn" class="ghost">キャンセル</button>
+            <button type="button" id="closeSupplyRequestBtn" class="cancel-btn ghost">キャンセル</button>
+            <button type="submit" class="btn kitchen-bg submit-btn">送信</button>
           </div>
         </form>
+      </div>
+    </div>
+  `;
+}
+
+function renderDeleteConfirmModalHtml() {
+  return `
+    <div class="modal" id="deleteConfirmModal" aria-hidden="true">
+      <div class="modal-content supply-request-modal" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmHeading">
+        <h3 id="deleteConfirmHeading">投稿を削除しますか？</h3>
+        <p class="sub">この操作は取り消せません。</p>
+        <div class="detail-actions-row">
+          <button type="button" id="cancelDeleteBtn" class="cancel-btn ghost">キャンセル</button>
+          <button type="button" id="confirmDeleteBtn" class="btn danger-btn">削除</button>
+        </div>
       </div>
     </div>
   `;
@@ -150,8 +165,8 @@ function renderPage(editMode = false) {
           <label>メモ<textarea id="editNote" rows="4">${escapeHtml(item.note || "")}</textarea></label>
           <p id="editError" class="error hidden"></p>
           <div class="detail-actions-row">
-            <button type="submit" class="btn save-btn ${modeButtonClass}">保存</button>
             <button type="button" id="cancelEditBtn" class="cancel-btn ghost">キャンセル</button>
+            <button type="submit" class="btn save-btn ${modeButtonClass}">保存</button>
           </div>
         </form>
       </section>
@@ -264,7 +279,14 @@ function renderPage(editMode = false) {
           <div class="detail-meta-date">${formatDate(item.createdAt)}</div>
         </div>
         ${isOwnPost
-          ? ""
+          ? `
+            <div class="detail-actions-row">
+              <button id="editPostBtn" class="btn ${modeButtonClass} edit-btn" type="button">編集</button>
+              <button id="deletePostBtn" class="detail-delete-icon-btn" type="button" aria-label="投稿を削除" title="投稿を削除">
+                <img src="./images/delete.png" alt="" aria-hidden="true" />
+              </button>
+            </div>
+          `
           : `
             <div class="detail-contact-row detail-card-chat">
               ${canSendSupplyRequest
@@ -280,18 +302,7 @@ function renderPage(editMode = false) {
           `}
       </article>
 
-      ${isOwnPost
-        ? `
-          <article class="detail-actions-card">
-            <div class="detail-actions-row">
-              <button id="editPostBtn" class="btn ${modeButtonClass} edit-btn" type="button">編集</button>
-              <button id="deletePostBtn" class="detail-delete-icon-btn" type="button" aria-label="投稿を削除" title="投稿を削除">
-                <img src="./images/delete.png" alt="" aria-hidden="true" />
-              </button>
-            </div>
-          </article>
-        `
-        : ""}
+      ${isOwnPost ? renderDeleteConfirmModalHtml() : ""}
     </section>
 
       ${canSendSupplyRequest && supplyAmountLimit && supplyRemainingAmount > 0 ? renderSupplyRequestModalHtml(supplySummary) : ""}
@@ -304,13 +315,35 @@ function renderPage(editMode = false) {
       renderPage(true);
     });
 
-    document.getElementById("deletePostBtn").addEventListener("click", () => {
-      if (!confirm("この投稿を削除します。よろしいですか？")) return;
+    const deleteModal = document.getElementById("deleteConfirmModal");
+    const deletePostBtn = document.getElementById("deletePostBtn");
+    const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+    const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
 
+    function closeDeleteModal() {
+      deleteModal.classList.remove("open");
+      deleteModal.setAttribute("aria-hidden", "true");
+    }
+
+    deletePostBtn.addEventListener("click", () => {
+      deleteModal.classList.add("open");
+      deleteModal.setAttribute("aria-hidden", "false");
+    });
+
+    cancelDeleteBtn.addEventListener("click", closeDeleteModal);
+
+    deleteModal.addEventListener("click", (event) => {
+      if (event.target === deleteModal) {
+        closeDeleteModal();
+      }
+    });
+
+    confirmDeleteBtn.addEventListener("click", () => {
       source.splice(itemIndex, 1);
       saveState(state);
       location.href = "./board.html";
     });
+
     return;
   }
 

@@ -303,11 +303,11 @@
   gap: 0.75rem;
 }
 
-.save-btn {
+.save-btn, .edit-btn, .submit-btn {
   flex: 1;
 }
 
-.edit-btn {
+.danger-btn {
   flex: 1;
 }
 
@@ -405,7 +405,7 @@
 }
 
 .danger-btn {
-  background: #e25555;
+  background: #dc4444;
 }
 
 .supply-reserve-text {
@@ -435,14 +435,15 @@
   border-radius: 20px;
   border: 1px solid var(--line);
   background: #fffdf9;
-  padding: 14px;
+  padding: 1.8rem 1rem 1rem 1rem;
   display: flex;
   flex-direction: column;
+  text-align: center;
   gap: 12px;
 }
 
 .supply-request-modal {
-  border-radius: 20px 20px 12px 12px;
+  border-radius: 20px;
 }
 
 .supply-request-form {
