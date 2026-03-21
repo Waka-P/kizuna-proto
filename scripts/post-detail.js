@@ -150,8 +150,8 @@ function renderPage(editMode = false) {
           <label>メモ<textarea id="editNote" rows="4">${escapeHtml(item.note || "")}</textarea></label>
           <p id="editError" class="error hidden"></p>
           <div class="detail-actions-row">
-            <button type="submit" class="btn ${modeButtonClass}">保存</button>
-            <button type="button" id="cancelEditBtn" class="ghost">キャンセル</button>
+            <button type="submit" class="btn save-btn ${modeButtonClass}">保存</button>
+            <button type="button" id="cancelEditBtn" class="cancel-btn ghost">キャンセル</button>
           </div>
         </form>
       </section>
@@ -284,8 +284,10 @@ function renderPage(editMode = false) {
         ? `
           <article class="detail-actions-card">
             <div class="detail-actions-row">
-              <button id="editPostBtn" class="btn provider-bg" type="button">編集</button>
-              <button id="deletePostBtn" class="btn danger-btn" type="button">削除</button>
+              <button id="editPostBtn" class="btn ${modeButtonClass} edit-btn" type="button">編集</button>
+              <button id="deletePostBtn" class="detail-delete-icon-btn" type="button" aria-label="投稿を削除" title="投稿を削除">
+                <img src="./images/delete.png" alt="" aria-hidden="true" />
+              </button>
             </div>
           </article>
         `

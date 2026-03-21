@@ -5,7 +5,6 @@ const {
   uid,
   getDirectMessagesWith,
   escapeHtml,
-  formatDate,
   readFileAsDataUrl,
 } = window.KizunaShared;
 
@@ -20,8 +19,36 @@ if (!partner) {
   location.href = "./chat.html";
 }
 
+function formatTime(value) {
+  return new Date(value).toLocaleTimeString("ja-JP", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+function markConversationAsRead(state, userName, partnerName) {
+  let changed = false;
+  const now = new Date().toISOString();
+
+  (Array.isArray(state.messages) ? state.messages : []).forEach((message) => {
+    const isIncoming = message.sender === partnerName && message.receiver === userName;
+    if (!isIncoming) return;
+    if (message.readAt) return;
+    message.readAt = now;
+    changed = true;
+  });
+
+  return changed;
+}
+
 function renderRoom() {
   const state = loadState();
+
+  if (markConversationAsRead(state, user.displayName, partner)) {
+    saveState(state);
+  }
+
   const messages = getDirectMessagesWith(state, user.displayName, partner);
 
   const root = document.getElementById("appView");
@@ -63,6 +90,7 @@ function renderRoom() {
     chatList.innerHTML = messages
       .map((message) => {
         const self = message.sender === user.displayName;
+        const isReadByPartner = Boolean(message.readAt);
         const date = new Date(message.createdAt);
         const dayKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
         const showDaySeparator = dayKey !== previousDayKey;
@@ -83,12 +111,14 @@ function renderRoom() {
 
         const requestCardHtml = request
           ? `
-            <div class="request-card status-${escapeHtml(request.status)}">
-              <p class="request-card-title">提供希望リクエスト</p>
-              <p class="request-card-line">物資: ${escapeHtml(request.itemTitle || "-")}</p>
-              <p class="request-card-line">希望数量: ${escapeHtml(String(request.amount || "-"))}</p>
-              <p class="request-card-line">上限数量: ${escapeHtml(String(request.maxAmount || "-"))}</p>
-              <p class="request-card-status">ステータス: ${escapeHtml(requestStatusText)}</p>
+            <div class="request-card">
+              <div class="request-card-head">
+                <p class="request-card-title">提供リクエスト</p>
+                <span class="request-status status-${escapeHtml(request.status)}">${escapeHtml(requestStatusText)}</span>
+              </div>
+              <p class="request-card-line">物資： ${escapeHtml(request.itemTitle || "-")}</p>
+              <p class="request-card-line">希望数量： ${escapeHtml(String(request.amount || "-"))}</p>
+              <p class="request-card-line">上限数量： ${escapeHtml(String(request.maxAmount || "-"))}</p>
               ${canRespondRequest
                 ? `
                   <div class="request-card-actions">
@@ -103,19 +133,37 @@ function renderRoom() {
 
         const defaultContentHtml = !request
           ? `
-            ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ""}
+            ${message.text ? `<p class="chat-message-text">${escapeHtml(message.text)}</p>` : ""}
             ${message.attachment ? `<a class="file-link" href="${message.attachment.dataUrl}" download="${escapeHtml(message.attachment.name)}">添付: ${escapeHtml(message.attachment.name)}</a>` : ""}
           `
           : "";
 
+        const metaHtml = `
+          <div class="chat-meta ${self ? "self" : "other"}">
+            ${self && isReadByPartner ? '<span class="chat-read">既読</span>' : ""}
+            <small class="chat-time">${formatTime(message.createdAt)}</small>
+          </div>
+        `;
+
+        if (request) {
+          return `
+            ${showDaySeparator ? `<div class="chat-day-separator"><span>${date.getMonth() + 1}月${date.getDate()}日</span></div>` : ""}
+            <article class="chat-request-wrap ${self ? "self" : "other"}">
+              ${self ? metaHtml : ""}
+              ${requestCardHtml}
+              ${self ? "" : metaHtml}
+            </article>
+          `;
+        }
+
         return `
           ${showDaySeparator ? `<div class="chat-day-separator"><span>${date.getMonth() + 1}月${date.getDate()}日</span></div>` : ""}
           <article class="chat-bubble-wrap ${self ? "self" : "other"}">
+            ${self ? metaHtml : ""}
             <div class="chat-bubble ${self ? "self" : "other"}">
-              ${requestCardHtml}
               ${defaultContentHtml}
-              <small>${formatDate(message.createdAt)}</small>
             </div>
+            ${self ? "" : metaHtml}
           </article>
         `;
       })
@@ -186,6 +234,7 @@ function renderRoom() {
       text,
       attachment,
       createdAt: new Date().toISOString(),
+      readAt: null,
     });
 
     saveState(state);

@@ -205,7 +205,7 @@ function getMessagePreviewText(message) {
     const status = message.request?.status;
     const statusText = status === "approved" ? "承認済み" : status === "rejected" ? "拒否" : "確認待ち";
     if (amount) return `提供希望 ${amount} / ${statusText}`;
-    return `提供希望リクエスト / ${statusText}`;
+    return `提供リクエスト / ${statusText}`;
   }
   if (message.text) return message.text;
   if (message.attachment) return "添付ファイル";

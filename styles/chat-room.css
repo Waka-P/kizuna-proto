@@ -97,6 +97,32 @@
   padding: 12px 14px;
 }
 
+.chat-room-shell .chat-bubble-wrap {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  margin-bottom: 8px;
+  gap: 6px;
+}
+
+.chat-room-shell .chat-bubble-wrap.self {
+  justify-content: flex-end;
+}
+
+.chat-room-shell .chat-bubble-wrap.other {
+  justify-content: flex-start;
+}
+
+.chat-room-shell .chat-bubble {
+  max-width: 75%;
+}
+
+.chat-room-shell .chat-message-text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .chat-room-shell .chat-bubble.self {
   background: #ffdeec;
   border-color: #ffc3db;
@@ -179,6 +205,56 @@
   color: #2d58a8;
 }
 
+.chat-request-wrap {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  margin: 0.8rem 0;
+  gap: 6px;
+}
+
+.chat-request-wrap.self {
+  justify-content: flex-end;
+}
+
+.chat-request-wrap.other {
+  justify-content: flex-start;
+}
+
+.chat-request-wrap .request-card {
+  width: 75%;
+}
+
+.chat-meta {
+  display: grid;
+  justify-items: center;
+  align-content: end;
+  min-width: 28px;
+}
+
+.chat-meta.self {
+  justify-items: end;
+}
+
+.chat-meta.other {
+  justify-items: start;
+}
+
+.chat-read {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #7b3351;
+}
+
+.chat-time {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.chat-room-shell[data-mode="provider"] .chat-read {
+  color: #2d58a8;
+}
+
 .request-card {
   background: #fff;
   border: 1px solid #e6d7c6;
@@ -188,14 +264,11 @@
   gap: 4px;
 }
 
-.request-card.status-approved {
-  border-color: #95c89d;
-  background: #f1fff3;
-}
-
-.request-card.status-rejected {
-  border-color: #e4a4a4;
-  background: #fff4f4;
+.request-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .request-card-title {
@@ -203,13 +276,38 @@
   font-weight: 700;
 }
 
-.request-card-line {
-  font-size: 0.82rem;
+.request-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  border: 1px solid transparent;
 }
 
-.request-card-status {
-  font-size: 0.78rem;
-  color: var(--muted);
+.request-status.status-pending {
+  color: #8a6200;
+  border-color: #e5c270;
+  background: #fff8e8;
+}
+
+.request-status.status-approved {
+  color: #27602f;
+  border-color: #95c89d;
+  background: #ebfcec;
+}
+
+.request-status.status-rejected {
+  color: #8f2828;
+  border-color: #e4a4a4;
+  background: #ffeeee;
+}
+
+.request-card-line {
+  font-size: 0.82rem;
 }
 
 .request-card-actions {

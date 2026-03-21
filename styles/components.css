@@ -154,7 +154,8 @@
 
 .chip {
   font-size: 0.75rem;
-  padding: 4px 8px;
+  font-weight: 500;
+  padding: 4px 0.75rem;
   border-radius: 999px;
   background: #fff0c7;
   color: #7d6118;
@@ -297,9 +298,42 @@
 }
 
 .detail-actions-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.save-btn {
+  flex: 1;
+}
+
+.edit-btn {
+  flex: 1;
+}
+
+.cancel-btn {
+  padding: 11px 1.5rem;
+}
+
+.detail-delete-icon-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: end;
+  background: transparent;
+}
+
+.detail-delete-icon-btn img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.detail-delete-icon-btn:active {
+  transform: scale(0.98);
 }
 
 .settings-container {
@@ -460,7 +494,7 @@
 .board-menu-link {
   text-decoration: none;
   color: inherit;
-  border: 1px solid var(--line);
+  border: 1.4px solid var(--line);
   border-radius: 14px;
   background: #fffefc;
   min-height: 112px;
@@ -493,7 +527,7 @@
 }
 
 .board-menu-link.board-menu-link-kitchen .board-menu-link-main {
-  color: #b93939;
+  color: var(--kitchen);
 }
 
 .board-menu-link.board-menu-link-kitchen .board-menu-link-sub {

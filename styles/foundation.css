@@ -58,4 +58,10 @@ button {
   cursor: pointer;
 }
 
+input, select, textarea {
+  &:focus {
+    outline-color: var(--line);
+  }
+}
+
 .hidden { display: none !important; }
