@@ -42,7 +42,7 @@ root.innerHTML = `
   ${renderHeaderHtml(user, "自分の投稿")}
 
   <section class="board-section-container board-list-page">
-    <a class="detail-page-back" href="./board.html">戻る</a>
+    <a class="detail-page-back" href="./board.html"><span>&lang;</span>戻る</a>
     <div id="myPostList" class="list"></div>
   </section>
 

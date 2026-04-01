@@ -44,7 +44,7 @@ function renderSupplyRequestModalHtml(summary) {
   return `
     <div class="modal" id="supplyRequestModal" aria-hidden="true">
       <div class="modal-content supply-request-modal" role="dialog" aria-modal="true" aria-labelledby="supplyRequestHeading">
-        <h3 id="supplyRequestHeading">必要な数量を送る</h3>
+        <h3 id="supplyRequestHeading">リクエスト</h3>
         <p class="sub">残り${escapeHtml(String(remainingAmount))}</p>
         <form id="supplyRequestForm" class="supply-request-form">
           <label style="text-align: left;">
@@ -114,7 +114,7 @@ function renderPage(editMode = false) {
     root.innerHTML = `
       ${renderDetailHeaderHtml("投稿詳細")}
       <section>
-        <a class="ghost detail-page-back" href="${missingBackHref}">一覧へ戻る</a>
+        <a class="detail-page-back" href="${missingBackHref}"><span>&lang;</span>一覧へ戻る</a>
         <article class="card">
           <p class="sub">投稿が見つかりませんでした。</p>
         </article>
@@ -143,7 +143,7 @@ function renderPage(editMode = false) {
       ${renderDetailHeaderHtml("投稿編集")}
 
       <section>
-        <a class="ghost detail-page-back" href="${backHref}">一覧へ戻る</a>
+        <a class="detail-page-back" href="${backHref}"><span>&lang;</span>一覧へ戻る</a>
         <form class="card" id="editPostForm">
           <h2>自分の投稿を編集</h2>
           <label>物資名<input id="editItemName" value="${escapeHtml(getItemDisplayName(item))}" required /></label>
@@ -246,7 +246,7 @@ function renderPage(editMode = false) {
     ${renderDetailHeaderHtml("投稿詳細")}
 
     <section class="post-detail-page">
-      <a class="ghost detail-page-back" href="${backHref}">一覧へ戻る</a>
+      <a class="detail-page-back" href="${backHref}"><span>&lang;</span>一覧へ戻る</a>
       <article class="card detail-card-emphasis">
         <div class="detail-headline">
           <div class="detail-title-stack">
@@ -290,7 +290,7 @@ function renderPage(editMode = false) {
           : `
             <div class="detail-contact-row detail-card-chat">
               ${canSendSupplyRequest
-                ? `<button type="button" id="openSupplyRequestBtn" class="btn kitchen-bg" ${supplyAmountLimit && supplyRemainingAmount > 0 ? "" : "disabled"}>必要数を送る</button>`
+                ? `<button type="button" id="openSupplyRequestBtn" class="btn kitchen-bg" ${supplyAmountLimit && supplyRemainingAmount > 0 ? "" : "disabled"}>リクエスト</button>`
                 : ""}
               <a class="btn ${modeButtonClass} detail-chat-btn" href="./chat-room.html?partner=${encodeURIComponent(item.author)}">チャット</a>
             </div>

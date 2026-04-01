@@ -170,10 +170,31 @@
 
 .detail-page-back {
   text-decoration: none;
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  width: fit-content;
   padding: 8px 12px;
-  border-radius: 12px;
-  margin-bottom: 10px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 0.6rem;
+}
+
+.detail-page-back span {
+  text-decoration: none;
+  width: fit-content;
+  height: 30px;
+  display: flex;
+  align-items: flex-end;
+  vertical-align: bottom;
+  border-radius: 999px;
+  color: var(--muted);
+  line-height: 1.8;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transform: scaleX(2);
+  transform-origin: left;
 }
 
 .detail-card-chat {
@@ -499,7 +520,7 @@
   border-radius: 14px;
   background: #fffefc;
   min-height: 112px;
-  padding: 14px;
+  padding: 1rem 1.5rem;
   display: flex;
   flex-direction: column;
   justify-content: center;

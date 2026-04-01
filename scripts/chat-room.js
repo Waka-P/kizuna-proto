@@ -4,6 +4,10 @@ const {
   saveState,
   uid,
   getDirectMessagesWith,
+  extractPositiveInteger,
+  getSupplyReservationSummary,
+  getItemDisplayName,
+  getItemQuantityUnit,
   escapeHtml,
   readFileAsDataUrl,
 } = window.KizunaShared;
@@ -25,6 +29,28 @@ function formatTime(value) {
     minute: "2-digit",
     hour12: false,
   });
+}
+
+function getRequestStatusText(status) {
+  if (status === "approved") return "承認済み";
+  if (status === "rejected") return "拒否";
+  return "確認待ち";
+}
+
+function getRequestableSupplies(state, partnerName) {
+  return (Array.isArray(state.supplies) ? state.supplies : [])
+    .filter((item) => item.author === partnerName)
+    .map((item) => {
+      const summary = getSupplyReservationSummary(state, item);
+      return { item, summary };
+    })
+    .filter(({ summary }) => summary.maxCount && summary.remainingCount > 0)
+    .sort((a, b) => new Date(b.item.createdAt).getTime() - new Date(a.item.createdAt).getTime());
+}
+
+function formatRemainingText(item, summary) {
+  const unit = getItemQuantityUnit(item);
+  return unit ? `残り${summary.remainingCount}${unit}` : `残り${summary.remainingCount}`;
 }
 
 function markConversationAsRead(state, userName, partnerName) {
@@ -50,6 +76,10 @@ function renderRoom() {
   }
 
   const messages = getDirectMessagesWith(state, user.displayName, partner);
+  const canOpenRequestMenu = user.mode === "KITCHEN";
+  const requestableSupplies = canOpenRequestMenu ? getRequestableSupplies(state, partner) : [];
+  const hasRequestableSupply = requestableSupplies.length > 0;
+  const firstRequestableSupply = requestableSupplies[0] || null;
 
   const root = document.getElementById("appView");
   root.classList.remove("hidden");
@@ -60,7 +90,7 @@ function renderRoom() {
   root.innerHTML = `
     <section class="chat-room-shell" data-mode="${mode}">
       <header class="chat-room-header">
-        <a href="./chat.html" class="chat-room-back" aria-label="戻る">‹</a>
+        <a href="./chat.html" class="chat-room-back" aria-label="戻る">&lang;</a>
         <div class="chat-room-partner-wrap">
           <h3 class="chat-room-partner">${escapeHtml(partner)}</h3>
           <span class="chat-room-honorific">さん</span>
@@ -72,11 +102,48 @@ function renderRoom() {
       <form id="chatForm" class="chat-composer">
         <input type="file" id="chatFile" class="hidden" />
         <div class="chat-input-wrap">
-          <button type="button" id="attachBtn" class="attach-btn" aria-label="ファイル添付">📎</button>
+          <div class="composer-tools">
+            <button type="button" id="composeMenuBtn" class="attach-btn" aria-label="メニュー" aria-expanded="false">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            </button>
+            <div id="composeMenu" class="compose-menu hidden" role="menu" aria-label="送信メニュー">
+              <button type="button" class="compose-menu-item" data-action="attach" role="menuitem">ファイル添付</button>
+              ${canOpenRequestMenu
+                ? `<button type="button" class="compose-menu-item" data-action="request" role="menuitem" ${hasRequestableSupply ? "" : "disabled"}>リクエスト</button>`
+                : ""}
+            </div>
+          </div>
           <textarea id="chatText" rows="1" placeholder="メッセージを入力"></textarea>
           <button type="submit" class="send-btn" aria-label="送信">➤</button>
         </div>
         <p id="attachName" class="attach-name hidden"></p>
+        ${canOpenRequestMenu
+          ? `
+            <div class="modal" id="chatRequestModal" aria-hidden="true">
+              <div class="modal-content supply-request-modal" role="dialog" aria-modal="true" aria-labelledby="chatRequestHeading">
+                <h3 id="chatRequestHeading">リクエスト</h3>
+                <p class="sub" id="chatRequestRemaining">${firstRequestableSupply ? escapeHtml(formatRemainingText(firstRequestableSupply.item, firstRequestableSupply.summary)) : "リクエスト可能な投稿がありません"}</p>
+                <form id="chatRequestForm" class="supply-request-form">
+                  <label style="text-align: left;">
+                    提供投稿
+                    <select id="chatRequestSupplyId" ${hasRequestableSupply ? "" : "disabled"}>
+                      ${requestableSupplies.map(({ item, summary }) => `<option value="${escapeHtml(item.id)}">${escapeHtml(getItemDisplayName(item) || "未指定")}（${escapeHtml(formatRemainingText(item, summary))}）</option>`).join("")}
+                    </select>
+                  </label>
+                  <label style="text-align: left;">
+                    必要数量
+                    <input id="chatRequestAmount" type="number" min="1" ${firstRequestableSupply ? `max="${escapeHtml(String(firstRequestableSupply.summary.remainingCount))}"` : ""} placeholder="1" ${hasRequestableSupply ? "" : "disabled"} />
+                  </label>
+                  <p id="chatRequestError" class="error hidden"></p>
+                  <div class="detail-actions-row">
+                    <button type="button" id="closeChatRequestBtn" class="cancel-btn ghost">キャンセル</button>
+                    <button type="submit" class="btn kitchen-bg submit-btn" ${hasRequestableSupply ? "" : "disabled"}>送信</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          `
+          : ""}
       </form>
     </section>
   `;
@@ -97,13 +164,7 @@ function renderRoom() {
         previousDayKey = dayKey;
 
         const request = message.type === "supply_request" ? message.request : null;
-        const requestStatusText = request
-          ? request.status === "approved"
-            ? "承認済み"
-            : request.status === "rejected"
-              ? "拒否"
-              : "確認待ち"
-          : "";
+        const requestStatusText = request ? getRequestStatusText(request.status) : "";
         const canRespondRequest = Boolean(request)
           && user.mode === "PROVIDER"
           && user.displayName === message.receiver
@@ -113,7 +174,7 @@ function renderRoom() {
           ? `
             <div class="request-card">
               <div class="request-card-head">
-                <p class="request-card-title">提供リクエスト</p>
+                <p class="request-card-title">リクエスト</p>
                 <span class="request-status status-${escapeHtml(request.status)}">${escapeHtml(requestStatusText)}</span>
               </div>
               <p class="request-card-line">物資： ${escapeHtml(request.itemTitle || "-")}</p>
@@ -174,8 +235,19 @@ function renderRoom() {
 
   const chatText = document.getElementById("chatText");
   const chatFile = document.getElementById("chatFile");
-  const attachBtn = document.getElementById("attachBtn");
+  const composeMenuBtn = document.getElementById("composeMenuBtn");
+  const composeMenu = document.getElementById("composeMenu");
   const attachName = document.getElementById("attachName");
+  const chatForm = document.getElementById("chatForm");
+
+  function setComposeMenuOpen(open) {
+    if (!composeMenu || !composeMenuBtn) return;
+    composeMenu.classList.toggle("hidden", !open);
+    composeMenuBtn.classList.toggle("open", open);
+    composeMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  setComposeMenuOpen(false);
 
   chatList.addEventListener("click", (event) => {
     const button = event.target.closest(".request-action-btn");
@@ -200,8 +272,35 @@ function renderRoom() {
     renderRoom();
   });
 
-  attachBtn.addEventListener("click", () => {
-    chatFile.click();
+  composeMenuBtn.addEventListener("click", () => {
+    const isOpen = composeMenuBtn.classList.contains("open");
+    setComposeMenuOpen(!isOpen);
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!chatForm.contains(event.target)) {
+      setComposeMenuOpen(false);
+    }
+  });
+
+  composeMenu.addEventListener("click", (event) => {
+    const button = event.target.closest(".compose-menu-item");
+    if (!button || button.disabled) return;
+
+    const action = button.dataset.action;
+    setComposeMenuOpen(false);
+
+    if (action === "attach") {
+      chatFile.click();
+      return;
+    }
+
+    if (action !== "request") return;
+
+    const modal = document.getElementById("chatRequestModal");
+    if (!modal) return;
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
   });
 
   chatFile.addEventListener("change", () => {
@@ -240,6 +339,124 @@ function renderRoom() {
     saveState(state);
     renderRoom();
   });
+
+  if (canOpenRequestMenu) {
+    const requestModal = document.getElementById("chatRequestModal");
+    const closeRequestBtn = document.getElementById("closeChatRequestBtn");
+    const requestForm = document.getElementById("chatRequestForm");
+    const requestSupplyId = document.getElementById("chatRequestSupplyId");
+    const requestAmount = document.getElementById("chatRequestAmount");
+    const requestError = document.getElementById("chatRequestError");
+    const requestRemaining = document.getElementById("chatRequestRemaining");
+
+    function clearRequestError() {
+      requestError.classList.add("hidden");
+      requestError.textContent = "";
+    }
+
+    function closeRequestModal() {
+      requestModal.classList.remove("open");
+      requestModal.setAttribute("aria-hidden", "true");
+      clearRequestError();
+    }
+
+    function getSelectedSupplyInfo(currentState) {
+      const selectedId = requestSupplyId?.value;
+      if (!selectedId) return null;
+
+      const selected = (Array.isArray(currentState.supplies) ? currentState.supplies : []).find(
+        (item) => item.id === selectedId && item.author === partner,
+      );
+      if (!selected) return null;
+
+      const summary = getSupplyReservationSummary(currentState, selected);
+      if (!summary.maxCount || !summary.remainingCount || summary.remainingCount <= 0) return null;
+
+      return { item: selected, summary };
+    }
+
+    function refreshRequestMeta() {
+      const info = getSelectedSupplyInfo(state);
+      if (!info) {
+        requestRemaining.textContent = "リクエスト可能な投稿がありません";
+        requestAmount.removeAttribute("max");
+        return;
+      }
+
+      requestRemaining.textContent = formatRemainingText(info.item, info.summary);
+      requestAmount.setAttribute("max", String(info.summary.remainingCount));
+    }
+
+    if (requestSupplyId) {
+      requestSupplyId.addEventListener("change", () => {
+        clearRequestError();
+        refreshRequestMeta();
+      });
+    }
+
+    if (closeRequestBtn) {
+      closeRequestBtn.addEventListener("click", closeRequestModal);
+    }
+
+    if (requestModal) {
+      requestModal.addEventListener("click", (event) => {
+        if (event.target === requestModal) {
+          closeRequestModal();
+        }
+      });
+    }
+
+    if (requestForm) {
+      requestForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const amount = extractPositiveInteger(requestAmount.value);
+        if (!amount) {
+          requestError.textContent = "数量は1以上で入力してください。";
+          requestError.classList.remove("hidden");
+          return;
+        }
+
+        const latestState = loadState();
+        const selectedInfo = getSelectedSupplyInfo(latestState);
+        if (!selectedInfo) {
+          requestError.textContent = "リクエスト可能な投稿がありません。";
+          requestError.classList.remove("hidden");
+          return;
+        }
+
+        if (amount > selectedInfo.summary.remainingCount) {
+          requestError.textContent = `現在の残りは${selectedInfo.summary.remainingCount}です。再入力してください。`;
+          requestError.classList.remove("hidden");
+          return;
+        }
+
+        latestState.messages.push({
+          id: uid("msg"),
+          type: "supply_request",
+          sender: user.displayName,
+          receiver: partner,
+          text: "",
+          attachment: null,
+          request: {
+            postId: selectedInfo.item.id,
+            postType: "supply",
+            itemTitle: getItemDisplayName(selectedInfo.item),
+            amount,
+            maxAmount: selectedInfo.summary.maxCount,
+            status: "pending",
+          },
+          createdAt: new Date().toISOString(),
+        });
+
+        saveState(latestState);
+        closeRequestModal();
+        renderRoom();
+      });
+    }
+
+    refreshRequestMeta();
+  }
 }
 
 renderRoom();
