@@ -9,6 +9,9 @@ const defaultState = {
   messages: [],
   rooms: [],
   users: [],
+  kizuna: [],
+  blocks: [],
+  reports: [],
   updatedAt: new Date().toISOString(),
 };
 
@@ -28,6 +31,9 @@ function loadState() {
       supplies: Array.isArray(parsed.supplies) ? parsed.supplies : [],
       messages: Array.isArray(parsed.messages) ? parsed.messages : [],
       users: Array.isArray(parsed.users) ? parsed.users : [],
+      kizuna: Array.isArray(parsed.kizuna) ? parsed.kizuna : [],
+      blocks: Array.isArray(parsed.blocks) ? parsed.blocks : [],
+      reports: Array.isArray(parsed.reports) ? parsed.reports : [],
     };
   } catch (_e) {
     return structuredClone(defaultState);
@@ -248,6 +254,107 @@ function getSupplyReservationSummary(state, supplyItem) {
   };
 }
 
+function isKizuna(state, fromName, toName) {
+  if (!fromName || !toName || fromName === toName) return false;
+  const list = Array.isArray(state?.kizuna) ? state.kizuna : [];
+  return list.some((entry) => entry.from === fromName && entry.to === toName);
+}
+
+function getKizunaCount(state, targetName) {
+  if (!targetName) return 0;
+  const list = Array.isArray(state?.kizuna) ? state.kizuna : [];
+  const names = new Set(
+    list
+      .filter((entry) => entry.to === targetName && entry.from && entry.from !== targetName)
+      .map((entry) => entry.from),
+  );
+  return names.size;
+}
+
+function toggleKizuna(state, fromName, toName) {
+  if (!fromName || !toName || fromName === toName) {
+    return false;
+  }
+
+  const list = Array.isArray(state.kizuna) ? state.kizuna : [];
+  const index = list.findIndex((entry) => entry.from === fromName && entry.to === toName);
+  if (index >= 0) {
+    list.splice(index, 1);
+    state.kizuna = list;
+    return false;
+  }
+
+  list.push({
+    id: uid("kizuna"),
+    from: fromName,
+    to: toName,
+    createdAt: new Date().toISOString(),
+  });
+  state.kizuna = list;
+  return true;
+}
+
+function isBlockedBy(state, ownerName, targetName) {
+  if (!ownerName || !targetName || ownerName === targetName) return false;
+  const list = Array.isArray(state?.blocks) ? state.blocks : [];
+  return list.some((entry) => entry.by === ownerName && entry.target === targetName);
+}
+
+function isBlockedEither(state, aName, bName) {
+  if (!aName || !bName || aName === bName) return false;
+  return isBlockedBy(state, aName, bName) || isBlockedBy(state, bName, aName);
+}
+
+function toggleBlock(state, ownerName, targetName) {
+  if (!ownerName || !targetName || ownerName === targetName) {
+    return false;
+  }
+
+  const list = Array.isArray(state.blocks) ? state.blocks : [];
+  const index = list.findIndex((entry) => entry.by === ownerName && entry.target === targetName);
+  if (index >= 0) {
+    list.splice(index, 1);
+    state.blocks = list;
+    return false;
+  }
+
+  list.push({
+    id: uid("block"),
+    by: ownerName,
+    target: targetName,
+    createdAt: new Date().toISOString(),
+  });
+  state.blocks = list;
+
+  const kizunaList = Array.isArray(state.kizuna) ? state.kizuna : [];
+  state.kizuna = kizunaList.filter(
+    (entry) => !((entry.from === ownerName && entry.to === targetName) || (entry.from === targetName && entry.to === ownerName)),
+  );
+
+  return true;
+}
+
+function addReport(state, payload) {
+  const reporter = String(payload?.reporter || "").trim();
+  const target = String(payload?.target || "").trim();
+  const reason = String(payload?.reason || "").trim();
+  const detail = String(payload?.detail || "").trim();
+  if (!reporter || !target || !reason || reporter === target) return null;
+
+  const list = Array.isArray(state.reports) ? state.reports : [];
+  const next = {
+    id: uid("report"),
+    reporter,
+    target,
+    reason,
+    detail,
+    createdAt: new Date().toISOString(),
+  };
+  list.push(next);
+  state.reports = list;
+  return next;
+}
+
 function openModeSwitchModal({ user, onApply }) {
   const modal = document.getElementById("switchModal");
   const root = document.getElementById("switchModalContent");
@@ -331,6 +438,13 @@ window.KizunaShared = {
   getChatSummaries,
   getMessagePreviewText,
   getSupplyReservationSummary,
+  isKizuna,
+  getKizunaCount,
+  toggleKizuna,
+  isBlockedBy,
+  isBlockedEither,
+  toggleBlock,
+  addReport,
   openModeSwitchModal,
 };
 })();

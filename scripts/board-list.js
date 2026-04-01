@@ -7,6 +7,7 @@ const {
   getItemDisplayName,
   getItemQuantityUnit,
   formatItemQuantity,
+  isBlockedEither,
   escapeHtml,
   formatDate,
 } = window.KizunaShared;
@@ -17,7 +18,8 @@ if (!user) {
 }
 
 const state = loadState();
-const boardItems = user.mode === "KITCHEN" ? state.supplies : state.needs;
+const boardItems = (user.mode === "KITCHEN" ? state.supplies : state.needs)
+  .filter((item) => item.author === user.displayName || !isBlockedEither(state, user.displayName, item.author));
 const boardItemType = user.mode === "KITCHEN" ? "supply" : "need";
 const boardTitle = user.mode === "KITCHEN" ? "余剰物資一覧" : "子ども食堂掲示板";
 const pageTitle = `${boardTitle}`;

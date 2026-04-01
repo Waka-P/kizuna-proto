@@ -8,6 +8,8 @@ const {
   getSupplyReservationSummary,
   getItemDisplayName,
   getItemQuantityUnit,
+  isBlockedBy,
+  isBlockedEither,
   escapeHtml,
   readFileAsDataUrl,
 } = window.KizunaShared;
@@ -76,7 +78,10 @@ function renderRoom() {
   }
 
   const messages = getDirectMessagesWith(state, user.displayName, partner);
-  const canOpenRequestMenu = user.mode === "KITCHEN";
+  const blockedByMe = isBlockedBy(state, user.displayName, partner);
+  const blockedByPartner = isBlockedBy(state, partner, user.displayName);
+  const conversationBlocked = isBlockedEither(state, user.displayName, partner);
+  const canOpenRequestMenu = user.mode === "KITCHEN" && !conversationBlocked;
   const requestableSupplies = canOpenRequestMenu ? getRequestableSupplies(state, partner) : [];
   const hasRequestableSupply = requestableSupplies.length > 0;
   const firstRequestableSupply = requestableSupplies[0] || null;
@@ -101,53 +106,60 @@ function renderRoom() {
       </header>
 
       <div class="chat-thread" id="chatList"></div>
-
-      <form id="chatForm" class="chat-composer">
-        <input type="file" id="chatFile" class="hidden" />
-        <div class="chat-input-wrap">
-          <div class="composer-tools">
-            <button type="button" id="composeMenuBtn" class="attach-btn" aria-label="メニュー" aria-expanded="false">
-              <i class="fa-solid fa-plus" aria-hidden="true"></i>
-            </button>
-            <div id="composeMenu" class="compose-menu hidden" role="menu" aria-label="送信メニュー">
-              <button type="button" class="compose-menu-item" data-action="attach" role="menuitem">ファイル添付</button>
-              ${canOpenRequestMenu
-                ? `<button type="button" class="compose-menu-item" data-action="request" role="menuitem" ${hasRequestableSupply ? "" : "disabled"}>リクエスト</button>`
-                : ""}
-            </div>
+      ${conversationBlocked
+        ? `
+          <div class="chat-room-blocked-note">
+            <p class="sub">${blockedByMe ? "このユーザーをブロック中のため、メッセージ送信はできません。" : "あなたはこのユーザーからブロックされています。"}</p>
           </div>
-          <textarea id="chatText" rows="1" placeholder="メッセージを入力"></textarea>
-          <button type="submit" class="send-btn" aria-label="送信">➤</button>
-        </div>
-        <p id="attachName" class="attach-name hidden"></p>
-        ${canOpenRequestMenu
-          ? `
-            <div class="modal" id="chatRequestModal" aria-hidden="true">
-              <div class="modal-content supply-request-modal" role="dialog" aria-modal="true" aria-labelledby="chatRequestHeading">
-                <h3 id="chatRequestHeading">リクエスト</h3>
-                <p class="sub" id="chatRequestRemaining">${firstRequestableSupply ? escapeHtml(formatRemainingText(firstRequestableSupply.item, firstRequestableSupply.summary)) : "リクエスト可能な投稿がありません"}</p>
-                <form id="chatRequestForm" class="supply-request-form">
-                  <label style="text-align: left;">
-                    提供投稿
-                    <select id="chatRequestSupplyId" ${hasRequestableSupply ? "" : "disabled"}>
-                      ${requestableSupplies.map(({ item, summary }) => `<option value="${escapeHtml(item.id)}">${escapeHtml(getItemDisplayName(item) || "未指定")}（${escapeHtml(formatRemainingText(item, summary))}）</option>`).join("")}
-                    </select>
-                  </label>
-                  <label style="text-align: left;">
-                    必要数量
-                    <input id="chatRequestAmount" type="number" min="1" ${firstRequestableSupply ? `max="${escapeHtml(String(firstRequestableSupply.summary.remainingCount))}"` : ""} placeholder="1" ${hasRequestableSupply ? "" : "disabled"} />
-                  </label>
-                  <p id="chatRequestError" class="error hidden"></p>
-                  <div class="detail-actions-row">
-                    <button type="button" id="closeChatRequestBtn" class="cancel-btn ghost">キャンセル</button>
-                    <button type="submit" class="btn kitchen-bg submit-btn" ${hasRequestableSupply ? "" : "disabled"}>送信</button>
-                  </div>
-                </form>
+        `
+        : `
+          <form id="chatForm" class="chat-composer">
+            <input type="file" id="chatFile" class="hidden" />
+            <div class="chat-input-wrap">
+              <div class="composer-tools">
+                <button type="button" id="composeMenuBtn" class="attach-btn" aria-label="メニュー" aria-expanded="false">
+                  <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                </button>
+                <div id="composeMenu" class="compose-menu hidden" role="menu" aria-label="送信メニュー">
+                  <button type="button" class="compose-menu-item" data-action="attach" role="menuitem">ファイル添付</button>
+                  ${canOpenRequestMenu
+                    ? `<button type="button" class="compose-menu-item" data-action="request" role="menuitem" ${hasRequestableSupply ? "" : "disabled"}>リクエスト</button>`
+                    : ""}
+                </div>
               </div>
+              <textarea id="chatText" rows="1" placeholder="メッセージを入力"></textarea>
+              <button type="submit" class="send-btn" aria-label="送信">➤</button>
             </div>
-          `
-          : ""}
-      </form>
+            <p id="attachName" class="attach-name hidden"></p>
+            ${canOpenRequestMenu
+              ? `
+                <div class="modal" id="chatRequestModal" aria-hidden="true">
+                  <div class="modal-content supply-request-modal" role="dialog" aria-modal="true" aria-labelledby="chatRequestHeading">
+                    <h3 id="chatRequestHeading">リクエスト</h3>
+                    <p class="sub" id="chatRequestRemaining">${firstRequestableSupply ? escapeHtml(formatRemainingText(firstRequestableSupply.item, firstRequestableSupply.summary)) : "リクエスト可能な投稿がありません"}</p>
+                    <form id="chatRequestForm" class="supply-request-form">
+                      <label style="text-align: left;">
+                        提供投稿
+                        <select id="chatRequestSupplyId" ${hasRequestableSupply ? "" : "disabled"}>
+                          ${requestableSupplies.map(({ item, summary }) => `<option value="${escapeHtml(item.id)}">${escapeHtml(getItemDisplayName(item) || "未指定")}（${escapeHtml(formatRemainingText(item, summary))}）</option>`).join("")}
+                        </select>
+                      </label>
+                      <label style="text-align: left;">
+                        必要数量
+                        <input id="chatRequestAmount" type="number" min="1" ${firstRequestableSupply ? `max="${escapeHtml(String(firstRequestableSupply.summary.remainingCount))}"` : ""} placeholder="1" ${hasRequestableSupply ? "" : "disabled"} />
+                      </label>
+                      <p id="chatRequestError" class="error hidden"></p>
+                      <div class="detail-actions-row">
+                        <button type="button" id="closeChatRequestBtn" class="cancel-btn ghost">キャンセル</button>
+                        <button type="submit" class="btn kitchen-bg submit-btn" ${hasRequestableSupply ? "" : "disabled"}>送信</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              `
+              : ""}
+          </form>
+        `}
     </section>
   `;
 
@@ -242,6 +254,10 @@ function renderRoom() {
   const composeMenu = document.getElementById("composeMenu");
   const attachName = document.getElementById("attachName");
   const chatForm = document.getElementById("chatForm");
+
+  if (!chatForm || !chatText || !chatFile || !composeMenuBtn || !composeMenu || !attachName) {
+    return;
+  }
 
   function setComposeMenuOpen(open) {
     if (!composeMenu || !composeMenuBtn) return;

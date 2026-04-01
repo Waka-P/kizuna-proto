@@ -5,6 +5,14 @@ const {
   renderBottomNavHtml,
   escapeHtml,
   formatDate,
+  getKizunaCount,
+  isKizuna,
+  toggleKizuna,
+  isBlockedBy,
+  isBlockedEither,
+  toggleBlock,
+  addReport,
+  saveState,
 } = window.KizunaShared;
 
 const user = ensureUser("./index.html");
@@ -87,6 +95,16 @@ const iconDataUrl = resolveProfileIconDataUrl(profile?.profileIcon);
 const initial = (targetName || "?").slice(0, 1);
 const isSelf = targetName === user.displayName;
 const backHref = getBackHref();
+const kizunaCount = getKizunaCount(state, targetName);
+const hasKizuna = !isSelf && isKizuna(state, user.displayName, targetName);
+const blockedByMe = !isSelf && isBlockedBy(state, user.displayName, targetName);
+const blockedByTarget = !isSelf && isBlockedBy(state, targetName, user.displayName);
+const isBlocked = !isSelf && isBlockedEither(state, user.displayName, targetName);
+const actionDisabledMessage = blockedByMe
+  ? "ブロック中のため、このユーザーとはチャットできません。"
+  : blockedByTarget
+    ? "あなたはこのユーザーからブロックされています。"
+    : "";
 
 const recentPosts = [...ownSupplies.map((item) => ({ ...item, postType: "supply" })), ...ownNeeds.map((item) => ({ ...item, postType: "need" }))]
   .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -119,12 +137,38 @@ root.innerHTML = `
 
       ${isSelf
         ? `<a class="btn ${user.mode === "KITCHEN" ? "kitchen-bg" : "provider-bg"}" href="./settings.html">プロフィールを編集</a>`
-        : `<a class="btn user-chat-btn ${user.mode === "KITCHEN" ? "kitchen-bg" : "provider-bg"}" href="./chat-room.html?partner=${encodeURIComponent(targetName)}">チャット</a>`}
+        : `
+          <div class="user-action-stack">
+            <div class="user-action-top-row">
+              ${isBlocked
+                ? `<button class="btn user-chat-btn user-chat-action ${user.mode === "KITCHEN" ? "kitchen-bg" : "provider-bg"}" type="button" disabled>チャット</button>`
+                : `<a class="btn user-chat-btn user-chat-action ${user.mode === "KITCHEN" ? "kitchen-bg" : "provider-bg"}" href="./chat-room.html?partner=${encodeURIComponent(targetName)}">チャット</a>`}
+              <button id="kizunaToggleBtn" class="kizuna-toggle-btn ${hasKizuna ? "active" : ""}" type="button" aria-label="キズナ" title="キズナ" ${isBlocked ? "disabled" : ""}>
+                <i class="${hasKizuna ? "fa-solid" : "fa-regular"} fa-star" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="user-relation-row">
+              <button id="blockToggleBtn" class="ghost relation-chip-btn block-btn" type="button">
+                <i class="fa-solid ${blockedByMe ? "fa-lock-open" : "fa-ban"}" aria-hidden="true"></i>
+                <span>${blockedByMe ? "ブロック解除" : "ブロック"}</span>
+              </button>
+              <button id="reportUserBtn" class="ghost relation-chip-btn report-btn" type="button">
+                <i class="fa-regular fa-flag" aria-hidden="true"></i>
+                <span>通報</span>
+              </button>
+            </div>
+          </div>
+          ${actionDisabledMessage ? `<p class="sub user-relation-note">${escapeHtml(actionDisabledMessage)}</p>` : ""}
+        `}
     </article>
 
     <article class="card user-activity-card">
       <h3>活動サマリ</h3>
       <div class="user-activity-grid">
+        <div class="user-activity-item">
+          <span class="sub">キズナ数</span>
+          <strong>${escapeHtml(String(kizunaCount))}</strong>
+        </div>
         <div class="user-activity-item">
           <span class="sub">ニーズ投稿</span>
           <strong>${escapeHtml(String(needsCount))}</strong>
@@ -175,7 +219,194 @@ root.innerHTML = `
         `
         : '<p class="sub">投稿はまだありません。</p>'}
     </article>
+
+    ${isSelf
+      ? ""
+      : `
+        <div class="modal" id="blockConfirmModal" aria-hidden="true">
+          <div class="modal-content supply-request-modal" role="dialog" aria-modal="true" aria-labelledby="blockConfirmHeading">
+            <h3 id="blockConfirmHeading">このユーザーをブロックしますか？</h3>
+            <p class="sub">ブロック中はチャット・リクエスト・キズナが利用できません。</p>
+            <div class="detail-actions-row">
+              <button type="button" id="closeBlockConfirmBtn" class="cancel-btn ghost">キャンセル</button>
+              <button type="button" id="confirmBlockBtn" class="btn danger-btn">ブロック</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal" id="reportModal" aria-hidden="true">
+          <div class="modal-content supply-request-modal" role="dialog" aria-modal="true" aria-labelledby="reportHeading">
+            <h3 id="reportHeading">ユーザーを通報</h3>
+            <form id="reportForm" class="supply-request-form">
+              <label style="text-align: left;">
+                理由
+                <select id="reportReason" required>
+                  <option value="">選択してください</option>
+                  <option value="spam">スパム・勧誘</option>
+                  <option value="abuse">迷惑行為</option>
+                  <option value="fraud">虚偽・なりすまし</option>
+                  <option value="other">その他</option>
+                </select>
+              </label>
+              <label style="text-align: left;">
+                詳細（任意）
+                <textarea id="reportDetail" rows="3" maxlength="300" placeholder="状況を入力してください"></textarea>
+              </label>
+              <p id="reportError" class="error hidden"></p>
+              <p id="reportSaved" class="sub hidden">通報を受け付けました。</p>
+              <div class="detail-actions-row">
+                <button type="button" id="closeReportBtn" class="cancel-btn ghost">キャンセル</button>
+                <button type="submit" class="btn submit-btn ${user.mode === "KITCHEN" ? "kitchen-bg" : "provider-bg"}">送信</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `}
   </section>
 
   ${renderBottomNavHtml("board", user)}
 `;
+
+if (!isSelf) {
+  const kizunaToggleBtn = document.getElementById("kizunaToggleBtn");
+  const blockToggleBtn = document.getElementById("blockToggleBtn");
+  const blockConfirmModal = document.getElementById("blockConfirmModal");
+  const closeBlockConfirmBtn = document.getElementById("closeBlockConfirmBtn");
+  const confirmBlockBtn = document.getElementById("confirmBlockBtn");
+  const reportUserBtn = document.getElementById("reportUserBtn");
+  const reportModal = document.getElementById("reportModal");
+  const closeReportBtn = document.getElementById("closeReportBtn");
+  const reportForm = document.getElementById("reportForm");
+  const reportReason = document.getElementById("reportReason");
+  const reportDetail = document.getElementById("reportDetail");
+  const reportError = document.getElementById("reportError");
+  const reportSaved = document.getElementById("reportSaved");
+
+  if (kizunaToggleBtn) {
+    kizunaToggleBtn.addEventListener("click", () => {
+      const latestState = loadState();
+      if (isBlockedEither(latestState, user.displayName, targetName)) {
+        alert("ブロック中のユーザーにはキズナできません。");
+        return;
+      }
+      toggleKizuna(latestState, user.displayName, targetName);
+      saveState(latestState);
+      location.reload();
+    });
+  }
+
+  if (blockToggleBtn) {
+    blockToggleBtn.addEventListener("click", () => {
+      const latestState = loadState();
+      const currentlyBlocked = isBlockedBy(latestState, user.displayName, targetName);
+      if (!currentlyBlocked) {
+        if (blockConfirmModal) {
+          blockConfirmModal.classList.add("open");
+          blockConfirmModal.setAttribute("aria-hidden", "false");
+        }
+        return;
+      }
+      toggleBlock(latestState, user.displayName, targetName);
+      saveState(latestState);
+      location.reload();
+    });
+  }
+
+  function closeBlockModal() {
+    if (!blockConfirmModal) return;
+    blockConfirmModal.classList.remove("open");
+    blockConfirmModal.setAttribute("aria-hidden", "true");
+  }
+
+  if (closeBlockConfirmBtn) {
+    closeBlockConfirmBtn.addEventListener("click", closeBlockModal);
+  }
+
+  if (blockConfirmModal) {
+    blockConfirmModal.addEventListener("click", (event) => {
+      if (event.target === blockConfirmModal) {
+        closeBlockModal();
+      }
+    });
+  }
+
+  if (confirmBlockBtn) {
+    confirmBlockBtn.addEventListener("click", () => {
+      const latestState = loadState();
+      if (isBlockedBy(latestState, user.displayName, targetName)) {
+        closeBlockModal();
+        return;
+      }
+      toggleBlock(latestState, user.displayName, targetName);
+      saveState(latestState);
+      closeBlockModal();
+      location.reload();
+    });
+  }
+
+  function closeReportModal() {
+    if (!reportModal) return;
+    reportModal.classList.remove("open");
+    reportModal.setAttribute("aria-hidden", "true");
+  }
+
+  if (reportUserBtn && reportModal) {
+    reportUserBtn.addEventListener("click", () => {
+      reportModal.classList.add("open");
+      reportModal.setAttribute("aria-hidden", "false");
+      if (reportError) {
+        reportError.classList.add("hidden");
+        reportError.textContent = "";
+      }
+      if (reportSaved) {
+        reportSaved.classList.add("hidden");
+      }
+    });
+  }
+
+  if (closeReportBtn) {
+    closeReportBtn.addEventListener("click", closeReportModal);
+  }
+
+  if (reportModal) {
+    reportModal.addEventListener("click", (event) => {
+      if (event.target === reportModal) {
+        closeReportModal();
+      }
+    });
+  }
+
+  if (reportForm && reportReason && reportDetail && reportError && reportSaved) {
+    reportForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const reason = reportReason.value.trim();
+      const detail = reportDetail.value.trim();
+      if (!reason) {
+        reportError.textContent = "通報理由を選択してください。";
+        reportError.classList.remove("hidden");
+        reportSaved.classList.add("hidden");
+        return;
+      }
+
+      const latestState = loadState();
+      const created = addReport(latestState, {
+        reporter: user.displayName,
+        target: targetName,
+        reason,
+        detail,
+      });
+      if (!created) {
+        reportError.textContent = "通報の送信に失敗しました。";
+        reportError.classList.remove("hidden");
+        reportSaved.classList.add("hidden");
+        return;
+      }
+
+      saveState(latestState);
+      reportError.classList.add("hidden");
+      reportSaved.classList.remove("hidden");
+      reportForm.reset();
+      setTimeout(closeReportModal, 600);
+    });
+  }
+}

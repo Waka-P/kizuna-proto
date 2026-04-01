@@ -5,6 +5,7 @@ const {
   renderBottomNavHtml,
   getChatSummaries,
   getMessagePreviewText,
+  isBlockedEither,
   escapeHtml,
   formatDate,
 } = window.KizunaShared;
@@ -15,7 +16,8 @@ if (!user) {
 }
 
 const state = loadState();
-const summaries = getChatSummaries(state, user.displayName);
+const summaries = getChatSummaries(state, user.displayName)
+  .filter(({ partnerName }) => !isBlockedEither(state, user.displayName, partnerName));
 
 const root = document.getElementById("appView");
 root.classList.remove("hidden");

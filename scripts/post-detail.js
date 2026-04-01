@@ -11,6 +11,7 @@ const {
   getItemQuantityNumber,
   getItemQuantityUnit,
   formatItemQuantity,
+  isBlockedEither,
   escapeHtml,
   formatDate,
 } = window.KizunaShared;
@@ -125,11 +126,12 @@ function renderPage(editMode = false) {
   }
 
   const isOwnPost = item.author === user.displayName;
+  const isBlocked = !isOwnPost && isBlockedEither(state, user.displayName, item.author);
   const supplySummary = type === "supply" ? getSupplyReservationSummary(state, item) : null;
   const quantityText = type === "supply"
     ? formatSupplyQuantityForViewer(item, supplySummary, isOwnPost)
     : formatItemQuantity(item);
-  const canSendSupplyRequest = !isOwnPost && user.mode === "KITCHEN" && type === "supply";
+  const canSendSupplyRequest = !isOwnPost && !isBlocked && user.mode === "KITCHEN" && type === "supply";
   const supplyAmountLimit = canSendSupplyRequest ? supplySummary.maxCount : null;
   const supplyRemainingAmount = canSendSupplyRequest ? supplySummary.remainingCount : null;
   const backHref = getBackHref(isOwnPost);
@@ -300,9 +302,13 @@ function renderPage(editMode = false) {
               ${canSendSupplyRequest
                 ? `<button type="button" id="openSupplyRequestBtn" class="btn kitchen-bg request-btn" ${supplyAmountLimit && supplyRemainingAmount > 0 ? "" : "disabled"}>リクエスト</button>`
                 : ""}
-              <a class="btn ${modeButtonClass} detail-chat-btn" href="./chat-room.html?partner=${encodeURIComponent(item.author)}">チャット</a>
+              ${isBlocked
+                ? `<button class="btn ${modeButtonClass} detail-chat-btn" type="button" disabled>チャット</button>`
+                : `<a class="btn ${modeButtonClass} detail-chat-btn" href="./chat-room.html?partner=${encodeURIComponent(item.author)}">チャット</a>`}
             </div>
-            ${canSendSupplyRequest && !supplyAmountLimit
+            ${isBlocked
+              ? '<p class="sub">ブロック状態のため、チャット・リクエストは利用できません。</p>'
+              : canSendSupplyRequest && !supplyAmountLimit
               ? '<p class="sub">提供数量に数字が含まれていないため、必要数の送信ができません。</p>'
               : canSendSupplyRequest && supplyRemainingAmount === 0
                 ? '<p class="sub">提供予定が上限に達しているため、リクエストできません。</p>'

@@ -103,6 +103,16 @@
   padding: 12px 14px;
 }
 
+.chat-room-blocked-note {
+  padding: 14px;
+  background: #fff;
+  border-top: 1px solid #f1d8d8;
+}
+
+.chat-room-shell[data-mode="provider"] .chat-room-blocked-note {
+  border-top-color: #d9e6ff;
+}
+
 .chat-room-shell .chat-bubble-wrap {
   display: flex;
   align-items: flex-end;

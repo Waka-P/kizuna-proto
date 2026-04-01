@@ -16,6 +16,53 @@ if (!user) {
   throw new Error("User not found");
 }
 
+function getBlockedEntriesForCurrentUser(state, currentUserName) {
+  const blocks = Array.isArray(state.blocks) ? state.blocks : [];
+  return blocks
+    .filter((entry) => entry.by === currentUserName)
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+}
+
+function renderBlockedListSectionHtml() {
+  const state = loadState();
+  const users = Array.isArray(state.users) ? state.users : [];
+  const blockedEntries = getBlockedEntriesForCurrentUser(state, user.displayName);
+
+  if (!blockedEntries.length) {
+    return `
+      <article class="card">
+        <h2>ブロックリスト</h2>
+        <p class="sub">現在ブロックしているユーザーはいません。</p>
+      </article>
+    `;
+  }
+
+  return `
+    <article class="card">
+      <h2>ブロックリスト</h2>
+      <p class="sub">ブロック解除すると、再びチャットやキズナが可能になります。</p>
+      <div id="blockedList" class="list">
+        ${blockedEntries.map((entry) => {
+          const targetProfile = users.find((record) => record.displayName === entry.target);
+          const initial = (entry.target || "?").slice(0, 1);
+          const iconDataUrl = resolveProfileIconDataUrl(targetProfile?.profileIcon);
+          return `
+            <article class="list-item list-item-compact">
+              <div class="list-meta-line">
+                <div class="meta-author">
+                  <span class="author-icon" aria-hidden="true">${iconDataUrl ? `<img src="${iconDataUrl}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:999px;"/>` : escapeHtml(initial)}</span>
+                  <span>${escapeHtml(entry.target)}</span>
+                </div>
+                <button class="ghost" type="button" data-unblock-target="${escapeHtml(entry.target)}">ブロック解除</button>
+              </div>
+            </article>
+          `;
+        }).join("")}
+      </div>
+    </article>
+  `;
+}
+
 const root = document.getElementById("appView");
 root.classList.remove("hidden");
 root.innerHTML = `
@@ -61,6 +108,8 @@ root.innerHTML = `
       <button id="openSwitch" class="ghost" type="button">モードを切り替える</button>
     </article>
 
+    ${renderBlockedListSectionHtml()}
+
     <article class="card detail-actions-card">
       <h2>データ管理</h2>
       <p class="sub">ローカルデータの初期化とログアウトができます。</p>
@@ -82,12 +131,29 @@ const savedNode = document.getElementById("profileSaved");
 const profileIconTrigger = document.getElementById("profileIconTrigger");
 const profileIconPreview = document.getElementById("profileIconPreview");
 const profileIconFileInput = document.getElementById("profileIconFile");
+const blockedList = document.getElementById("blockedList");
 
 function resolveProfileIconDataUrl(icon) {
   if (!icon) return "";
   if (typeof icon === "string") return icon;
   if (typeof icon.dataUrl === "string") return icon.dataUrl;
   return "";
+}
+
+if (blockedList) {
+  blockedList.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-unblock-target]");
+    if (!button) return;
+
+    const target = String(button.dataset.unblockTarget || "").trim();
+    if (!target) return;
+
+    const latestState = loadState();
+    const blocks = Array.isArray(latestState.blocks) ? latestState.blocks : [];
+    latestState.blocks = blocks.filter((entry) => !(entry.by === user.displayName && entry.target === target));
+    saveState(latestState);
+    location.reload();
+  });
 }
 
 let nextProfileIcon = user.profileIcon || null;
@@ -167,6 +233,21 @@ function migrateDisplayNameInState(prevName, nextName) {
     sender: message.sender === prevName ? nextName : message.sender,
     receiver: message.receiver === prevName ? nextName : message.receiver,
   }));
+  const migratedKizuna = (Array.isArray(state.kizuna) ? state.kizuna : []).map((entry) => ({
+    ...entry,
+    from: entry.from === prevName ? nextName : entry.from,
+    to: entry.to === prevName ? nextName : entry.to,
+  }));
+  const migratedBlocks = (Array.isArray(state.blocks) ? state.blocks : []).map((entry) => ({
+    ...entry,
+    by: entry.by === prevName ? nextName : entry.by,
+    target: entry.target === prevName ? nextName : entry.target,
+  }));
+  const migratedReports = (Array.isArray(state.reports) ? state.reports : []).map((entry) => ({
+    ...entry,
+    reporter: entry.reporter === prevName ? nextName : entry.reporter,
+    target: entry.target === prevName ? nextName : entry.target,
+  }));
   const users = Array.isArray(state.users) ? [...state.users] : [];
   const prevUserIndex = users.findIndex((entry) => entry.displayName === prevName);
   const nextUserIndex = users.findIndex((entry) => entry.displayName === nextName);
@@ -193,6 +274,9 @@ function migrateDisplayNameInState(prevName, nextName) {
     needs: migratedNeeds,
     supplies: migratedSupplies,
     messages: migratedMessages,
+    kizuna: migratedKizuna,
+    blocks: migratedBlocks,
+    reports: migratedReports,
     users,
   });
 }
