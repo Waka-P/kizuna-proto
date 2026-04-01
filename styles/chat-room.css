@@ -56,6 +56,11 @@
   margin-top: 0.2rem;
 }
 
+.chat-room-partner-link {
+  text-decoration: none;
+  color: inherit;
+}
+
 .chat-room-partner {
   white-space: nowrap;
   overflow: hidden;

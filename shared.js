@@ -8,6 +8,7 @@ const defaultState = {
   supplies: [],
   messages: [],
   rooms: [],
+  users: [],
   updatedAt: new Date().toISOString(),
 };
 
@@ -26,6 +27,7 @@ function loadState() {
       needs: Array.isArray(parsed.needs) ? parsed.needs : [],
       supplies: Array.isArray(parsed.supplies) ? parsed.supplies : [],
       messages: Array.isArray(parsed.messages) ? parsed.messages : [],
+      users: Array.isArray(parsed.users) ? parsed.users : [],
     };
   } catch (_e) {
     return structuredClone(defaultState);

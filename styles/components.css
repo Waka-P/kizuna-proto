@@ -49,6 +49,13 @@
   color: inherit;
 }
 
+.list-item-main-link {
+  display: grid;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+
 .list-item-link .list-item {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -131,6 +138,15 @@
   gap: 6px;
 }
 
+.meta-author-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.meta-author-link:active {
+  opacity: 0.82;
+}
+
 .author-icon {
   width: 22px;
   height: 22px;
@@ -161,11 +177,19 @@
   color: #7d6118;
 }
 
-.detail-chat-btn {
+.detail-chat-btn, .user-chat-btn, .request-btn {
   display: flex;
+  flex: 1;
   justify-content: center;
   align-items: center;
   text-decoration: none;
+  padding: 0.45rem 1.5rem;
+}
+
+.request-btn {
+  background: #fceaea;
+  border: 2px solid var(--kitchen);
+  color: var(--kitchen);
 }
 
 .detail-page-back {
@@ -304,8 +328,7 @@
 
 .detail-contact-row {
   margin-top: 8px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 8px;
 }
 

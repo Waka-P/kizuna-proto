@@ -117,5 +117,5 @@ document.getElementById("postForm").addEventListener("submit", (e) => {
   }
 
   saveState(state);
-  location.href = "./board.html";
+  location.href = "./board-my-posts.html";
 });

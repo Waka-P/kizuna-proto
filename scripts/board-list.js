@@ -63,30 +63,41 @@ if (!boardItems.length) {
         ? formatSupplyQuantityForViewer(item, supplySummary, isOwnPost)
         : formatItemQuantity(item);
       const authorInitial = (item.author || "?").slice(0, 1);
+      const detailHref = `./post-detail.html?type=${boardItemType}&id=${encodeURIComponent(item.id)}&from=board-list`;
+      const userDetailHref = `./user-detail.html?name=${encodeURIComponent(item.author || "")}&from=board-list`;
+
+      const detailBodyHtml = `
+        <div class="row list-item-top-row">
+          <strong class="list-item-title">${escapeHtml(getItemDisplayName(item) || "未指定")}</strong>
+          <span class="chip list-item-category-chip">${escapeHtml(item.category || "未分類")}</span>
+        </div>
+        <div class="list-item-facts">
+          <span class="list-fact-pill">${escapeHtml(quantityText)}</span>
+          <span class="list-fact-pill">${escapeHtml(item.area || "未設定")}</span>
+        </div>
+        ${item.note ? `<p class="list-note-preview">${escapeHtml(item.note)}</p>` : ""}
+      `;
+
       const cardHtml = `
         <article class="list-item list-item-compact">
-          <div class="row list-item-top-row">
-            <strong class="list-item-title">${escapeHtml(getItemDisplayName(item) || "未指定")}</strong>
-            <span class="chip list-item-category-chip">${escapeHtml(item.category || "未分類")}</span>
-          </div>
-          <div class="list-item-facts">
-            <span class="list-fact-pill">${escapeHtml(quantityText)}</span>
-            <span class="list-fact-pill">${escapeHtml(item.area || "未設定")}</span>
-          </div>
-          ${item.note ? `<p class="list-note-preview">${escapeHtml(item.note)}</p>` : ""}
+          ${isOwnPost
+            ? detailBodyHtml
+            : `<a class="list-item-main-link" href="${detailHref}">${detailBodyHtml}</a>`}
           <div class="list-meta-line${isOwnPost ? " list-meta-line-own" : ""}">
-            ${isOwnPost ? "" : `<div class="meta-author"><span class="author-icon" aria-hidden="true">${escapeHtml(authorInitial)}</span><span>${escapeHtml(item.author)}</span></div>`}
+            ${isOwnPost
+              ? ""
+              : `
+                <a class="meta-author meta-author-link" href="${userDetailHref}">
+                  <span class="author-icon" aria-hidden="true">${escapeHtml(authorInitial)}</span>
+                  <span>${escapeHtml(item.author)}</span>
+                </a>
+              `}
             <div class="list-meta-date">${formatDate(item.createdAt)}</div>
           </div>
         </article>
       `;
 
-      if (isOwnPost) {
-        return cardHtml;
-      }
-
-      const detailHref = `./post-detail.html?type=${boardItemType}&id=${encodeURIComponent(item.id)}&from=board-list`;
-      return `<a class="list-item-link" href="${detailHref}">${cardHtml}</a>`;
+      return cardHtml;
     })
     .join("");
 }

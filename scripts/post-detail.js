@@ -134,6 +134,7 @@ function renderPage(editMode = false) {
   const supplyRemainingAmount = canSendSupplyRequest ? supplySummary.remainingCount : null;
   const backHref = getBackHref(isOwnPost);
   const authorInitial = (item.author || "?").slice(0, 1);
+  const userDetailHref = `./user-detail.html?name=${encodeURIComponent(item.author || "")}&from=post-detail&type=${encodeURIComponent(type)}&id=${encodeURIComponent(item.id)}`;
 
   if (isOwnPost && editMode) {
     const quantityAmount = getItemQuantityNumber(item);
@@ -275,7 +276,14 @@ function renderPage(editMode = false) {
           : ""}
 
         <div class="detail-meta-line${isOwnPost ? " detail-meta-line-own" : ""}">
-          ${isOwnPost ? "" : `<div class="meta-author"><span class="author-icon" aria-hidden="true">${escapeHtml(authorInitial)}</span><span>${escapeHtml(item.author)}</span></div>`}
+          ${isOwnPost
+            ? ""
+            : `
+              <a class="meta-author meta-author-link" href="${userDetailHref}">
+                <span class="author-icon" aria-hidden="true">${escapeHtml(authorInitial)}</span>
+                <span>${escapeHtml(item.author)}</span>
+              </a>
+            `}
           <div class="detail-meta-date">${formatDate(item.createdAt)}</div>
         </div>
         ${isOwnPost
@@ -290,7 +298,7 @@ function renderPage(editMode = false) {
           : `
             <div class="detail-contact-row detail-card-chat">
               ${canSendSupplyRequest
-                ? `<button type="button" id="openSupplyRequestBtn" class="btn kitchen-bg" ${supplyAmountLimit && supplyRemainingAmount > 0 ? "" : "disabled"}>リクエスト</button>`
+                ? `<button type="button" id="openSupplyRequestBtn" class="btn kitchen-bg request-btn" ${supplyAmountLimit && supplyRemainingAmount > 0 ? "" : "disabled"}>リクエスト</button>`
                 : ""}
               <a class="btn ${modeButtonClass} detail-chat-btn" href="./chat-room.html?partner=${encodeURIComponent(item.author)}">チャット</a>
             </div>
@@ -341,7 +349,7 @@ function renderPage(editMode = false) {
     confirmDeleteBtn.addEventListener("click", () => {
       source.splice(itemIndex, 1);
       saveState(state);
-      location.href = "./board.html";
+      location.href = "./board-my-posts.html";
     });
 
     return;

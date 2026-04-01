@@ -1,4 +1,10 @@
-const { loadUser, saveUser, uid } = window.KizunaShared;
+const {
+  loadUser,
+  saveUser,
+  uid,
+  loadState,
+  saveState,
+} = window.KizunaShared;
 
 const existingUser = loadUser();
 if (existingUser) {
@@ -51,6 +57,30 @@ document.getElementById("loginForm").addEventListener("submit", (e) => {
     return;
   }
 
-  saveUser({ id: uid("user"), displayName: name, mode });
+  const loggedInUser = { id: uid("user"), displayName: name, mode };
+  saveUser(loggedInUser);
+
+  const state = loadState();
+  const existingIndex = (Array.isArray(state.users) ? state.users : []).findIndex((entry) => entry.displayName === name);
+  const userRecord = {
+    id: loggedInUser.id,
+    displayName: name,
+    mode,
+    contact: "",
+    bio: "",
+    profileIcon: null,
+    updatedAt: new Date().toISOString(),
+  };
+
+  if (existingIndex >= 0) {
+    state.users[existingIndex] = {
+      ...state.users[existingIndex],
+      ...userRecord,
+    };
+  } else {
+    state.users.push(userRecord);
+  }
+
+  saveState(state);
   location.href = "./board.html";
 });

@@ -42,6 +42,10 @@ root.innerHTML = `
           <input id="profileContact" maxlength="120" value="${escapeHtml(user.contact || "")}" placeholder="例: info@example.com" />
         </label>
         <label>
+          住所（任意）
+          <input id="profileAddress" maxlength="120" value="${escapeHtml(user.address || "")}" placeholder="例: 東京都渋谷区〇〇1-2-3" />
+        </label>
+        <label>
           自己紹介（任意）
           <textarea id="profileBio" rows="3" maxlength="300" placeholder="活動内容や対応できる物資などを入力">${escapeHtml(user.bio || "")}</textarea>
         </label>
@@ -71,6 +75,7 @@ root.innerHTML = `
 const profileForm = document.getElementById("profileForm");
 const displayNameInput = document.getElementById("profileDisplayName");
 const contactInput = document.getElementById("profileContact");
+const addressInput = document.getElementById("profileAddress");
 const bioInput = document.getElementById("profileBio");
 const errorNode = document.getElementById("profileError");
 const savedNode = document.getElementById("profileSaved");
@@ -162,12 +167,33 @@ function migrateDisplayNameInState(prevName, nextName) {
     sender: message.sender === prevName ? nextName : message.sender,
     receiver: message.receiver === prevName ? nextName : message.receiver,
   }));
+  const users = Array.isArray(state.users) ? [...state.users] : [];
+  const prevUserIndex = users.findIndex((entry) => entry.displayName === prevName);
+  const nextUserIndex = users.findIndex((entry) => entry.displayName === nextName);
+  if (prevUserIndex >= 0) {
+    users[prevUserIndex] = {
+      ...users[prevUserIndex],
+      displayName: nextName,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  if (prevUserIndex >= 0 && nextUserIndex >= 0 && prevUserIndex !== nextUserIndex) {
+    users[nextUserIndex] = {
+      ...users[nextUserIndex],
+      ...users[prevUserIndex],
+      displayName: nextName,
+      updatedAt: new Date().toISOString(),
+    };
+    users.splice(prevUserIndex, 1);
+  }
 
   saveState({
     ...state,
     needs: migratedNeeds,
     supplies: migratedSupplies,
     messages: migratedMessages,
+    users,
   });
 }
 
@@ -176,6 +202,7 @@ profileForm.addEventListener("submit", (e) => {
 
   const nextDisplayName = displayNameInput.value.trim();
   const nextContact = contactInput.value.trim();
+  const nextAddress = addressInput.value.trim();
   const nextBio = bioInput.value.trim();
 
   if (!nextDisplayName) {
@@ -193,9 +220,38 @@ profileForm.addEventListener("submit", (e) => {
 
   user.displayName = nextDisplayName;
   user.contact = nextContact;
+  user.address = nextAddress;
   user.bio = nextBio;
   user.profileIcon = nextProfileIcon;
   saveUser(user);
+
+  const latestState = loadState();
+  const users = Array.isArray(latestState.users) ? latestState.users : [];
+  const existingIndex = users.findIndex((entry) => entry.displayName === nextDisplayName);
+  const updatedRecord = {
+    id: user.id,
+    displayName: nextDisplayName,
+    mode: user.mode,
+    contact: nextContact,
+    address: nextAddress,
+    bio: nextBio,
+    profileIcon: nextProfileIcon,
+    updatedAt: new Date().toISOString(),
+  };
+
+  if (existingIndex >= 0) {
+    users[existingIndex] = {
+      ...users[existingIndex],
+      ...updatedRecord,
+    };
+  } else {
+    users.push(updatedRecord);
+  }
+
+  saveState({
+    ...latestState,
+    users,
+  });
 
   savedNode.classList.remove("hidden");
 });

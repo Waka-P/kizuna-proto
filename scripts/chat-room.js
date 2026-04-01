@@ -86,13 +86,16 @@ function renderRoom() {
   root.classList.add("chat-room-page");
 
   const mode = user.mode === "KITCHEN" ? "kitchen" : "provider";
+  const partnerDetailHref = `./user-detail.html?name=${encodeURIComponent(partner)}&from=chat-room&partner=${encodeURIComponent(partner)}`;
 
   root.innerHTML = `
     <section class="chat-room-shell" data-mode="${mode}">
       <header class="chat-room-header">
         <a href="./chat.html" class="chat-room-back" aria-label="戻る">&lang;</a>
         <div class="chat-room-partner-wrap">
-          <h3 class="chat-room-partner">${escapeHtml(partner)}</h3>
+          <a class="chat-room-partner-link" href="${partnerDetailHref}">
+            <h3 class="chat-room-partner">${escapeHtml(partner)}</h3>
+          </a>
           <span class="chat-room-honorific">さん</span>
         </div>
       </header>
@@ -178,8 +181,8 @@ function renderRoom() {
                 <span class="request-status status-${escapeHtml(request.status)}">${escapeHtml(requestStatusText)}</span>
               </div>
               <p class="request-card-line">物資： ${escapeHtml(request.itemTitle || "-")}</p>
-              <p class="request-card-line">希望数量： ${escapeHtml(String(request.amount || "-"))}</p>
-              <p class="request-card-line">上限数量： ${escapeHtml(String(request.maxAmount || "-"))}</p>
+              <p class="request-card-line">希望数量： ${escapeHtml(String(request.amount || "-"))}${escapeHtml(request.unit || "")}</p>
+
               ${canRespondRequest
                 ? `
                   <div class="request-card-actions">
