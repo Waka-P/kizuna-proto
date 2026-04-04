@@ -77,6 +77,9 @@ if (!boardItems.length) {
           <span class="list-fact-pill">${escapeHtml(quantityText)}</span>
           <span class="list-fact-pill">${escapeHtml(item.area || "未設定")}</span>
         </div>
+        ${boardItemType === "supply" && item.gratitudeRequest
+          ? `<p class="list-note-preview">希望するお礼: ${escapeHtml(item.gratitudeRequest)}</p>`
+          : ""}
         ${item.note ? `<p class="list-note-preview">${escapeHtml(item.note)}</p>` : ""}
       `;
 

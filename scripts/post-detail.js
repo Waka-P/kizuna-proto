@@ -165,6 +165,7 @@ function renderPage(editMode = false) {
             </select>
           </label>
           <label>エリア<input id="editArea" value="${escapeHtml(item.area || "")}" required /></label>
+          ${type === "supply" ? `<label>支援後に受け取りたいお礼<textarea id="editGratitudeRequest" rows="3" placeholder="例: 活動写真、子どもたちからのメッセージ">${escapeHtml(item.gratitudeRequest || "")}</textarea></label>` : ""}
           <label>メモ<textarea id="editNote" rows="4">${escapeHtml(item.note || "")}</textarea></label>
           <p id="editError" class="error hidden"></p>
           <div class="detail-actions-row">
@@ -186,6 +187,7 @@ function renderPage(editMode = false) {
       const quantityUnit = document.getElementById("editQuantityUnit").value.trim();
       const category = document.getElementById("editCategory").value;
       const area = document.getElementById("editArea").value.trim();
+      const gratitudeRequest = type === "supply" ? document.getElementById("editGratitudeRequest")?.value.trim() || "" : "";
       const note = document.getElementById("editNote").value.trim();
       const editErr = document.getElementById("editError");
 
@@ -231,6 +233,7 @@ function renderPage(editMode = false) {
         quantity: quantityUnit ? `${quantityAmount} ${quantityUnit}` : String(quantityAmount),
         category,
         area,
+        gratitudeRequest,
         note,
       };
 
@@ -273,6 +276,15 @@ function renderPage(editMode = false) {
             <section class="detail-note-section" aria-label="投稿メモ">
               <h3>メモ</h3>
               <p>${escapeHtml(item.note)}</p>
+            </section>
+          `
+          : ""}
+
+        ${item.gratitudeRequest
+          ? `
+            <section class="detail-note-section" aria-label="お礼の希望">
+              <h3>支援後に受け取りたいお礼</h3>
+              <p>${escapeHtml(item.gratitudeRequest)}</p>
             </section>
           `
           : ""}

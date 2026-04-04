@@ -388,6 +388,16 @@
   font-size: 0.82rem;
 }
 
+.gratitude-card {
+  border-color: #f0d6a8;
+  background: #fffaf0;
+}
+
+.chat-room-shell[data-mode="provider"] .gratitude-card {
+  border-color: #bed3ff;
+  background: #f6f9ff;
+}
+
 .request-card-actions {
   margin-top: 4px;
   display: grid;
@@ -413,4 +423,13 @@
   color: #8f2828;
   border-color: #e4a4a4;
   background: #ffeeee;
+}
+
+#chatGratitudeForm textarea {
+  width: 100%;
+  margin-top: 4px;
+}
+
+#openGratitudeFileBtn {
+  width: 100%;
 }

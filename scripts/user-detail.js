@@ -5,7 +5,6 @@ const {
   renderBottomNavHtml,
   escapeHtml,
   formatDate,
-  getKizunaCount,
   isKizuna,
   toggleKizuna,
   isBlockedBy,
@@ -76,17 +75,9 @@ const profile = users
 
 const ownNeeds = (Array.isArray(state.needs) ? state.needs : []).filter((item) => item.author === targetName);
 const ownSupplies = (Array.isArray(state.supplies) ? state.supplies : []).filter((item) => item.author === targetName);
-const relatedMessages = (Array.isArray(state.messages) ? state.messages : []).filter(
-  (message) => message.sender === targetName || message.receiver === targetName,
-);
 
 const needsCount = ownNeeds.length;
 const suppliesCount = ownSupplies.length;
-const sentCount = relatedMessages.filter((message) => message.sender === targetName).length;
-const receivedCount = relatedMessages.filter((message) => message.receiver === targetName).length;
-const latestMessage = relatedMessages
-  .slice()
-  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] || null;
 
 const mode = inferMode(profile, needsCount, suppliesCount);
 const modeText = mode === "KITCHEN" ? "子ども食堂" : mode === "PROVIDER" ? "提供者" : "未設定";
@@ -95,7 +86,6 @@ const iconDataUrl = resolveProfileIconDataUrl(profile?.profileIcon);
 const initial = (targetName || "?").slice(0, 1);
 const isSelf = targetName === user.displayName;
 const backHref = getBackHref();
-const kizunaCount = getKizunaCount(state, targetName);
 const hasKizuna = !isSelf && isKizuna(state, user.displayName, targetName);
 const blockedByMe = !isSelf && isBlockedBy(state, user.displayName, targetName);
 const blockedByTarget = !isSelf && isBlockedBy(state, targetName, user.displayName);
@@ -109,6 +99,12 @@ const actionDisabledMessage = blockedByMe
 const recentPosts = [...ownSupplies.map((item) => ({ ...item, postType: "supply" })), ...ownNeeds.map((item) => ({ ...item, postType: "need" }))]
   .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   .slice(0, 5);
+
+const gratitudeBadges = (Array.isArray(state.badges) ? state.badges : [])
+  .filter((badge) => (badge.type === "gratitude_received" || badge.type === "donation_proof") && badge.provider === targetName)
+  .slice()
+  .sort((a, b) => new Date(b.grantedAt || 0).getTime() - new Date(a.grantedAt || 0).getTime());
+const gratitudeBadgeById = new Map(gratitudeBadges.map((badge) => [badge.id, badge]));
 
 const root = document.getElementById("appView");
 root.classList.remove("hidden");
@@ -162,31 +158,21 @@ root.innerHTML = `
         `}
     </article>
 
-    <article class="card user-activity-card">
-      <h3>活動サマリ</h3>
-      <div class="user-activity-grid">
-        <div class="user-activity-item">
-          <span class="sub">キズナ数</span>
-          <strong>${escapeHtml(String(kizunaCount))}</strong>
-        </div>
-        <div class="user-activity-item">
-          <span class="sub">ニーズ投稿</span>
-          <strong>${escapeHtml(String(needsCount))}</strong>
-        </div>
-        <div class="user-activity-item">
-          <span class="sub">余剰物資投稿</span>
-          <strong>${escapeHtml(String(suppliesCount))}</strong>
-        </div>
-        <div class="user-activity-item">
-          <span class="sub">送信メッセージ</span>
-          <strong>${escapeHtml(String(sentCount))}</strong>
-        </div>
-        <div class="user-activity-item">
-          <span class="sub">受信メッセージ</span>
-          <strong>${escapeHtml(String(receivedCount))}</strong>
-        </div>
-      </div>
-      <p class="sub">最終メッセージ: ${latestMessage ? escapeHtml(formatDate(latestMessage.createdAt)) : "なし"}</p>
+    <article class="card user-badge-card">
+      <h3>バッジ</h3>
+      ${gratitudeBadges.length
+        ? `
+          <ul class="user-badge-grid" id="userBadgeGrid">
+            ${gratitudeBadges.map((badge) => `
+              <li>
+                <button type="button" class="user-badge-icon-btn" data-badge-id="${escapeHtml(badge.id)}" aria-label="バッジ詳細を表示">
+                  <span class="user-badge-icon" aria-hidden="true"><i class="fa-solid fa-award"></i></span>
+                </button>
+              </li>
+            `).join("")}
+          </ul>
+        `
+        : '<p class="sub">まだバッジはありません。</p>'}
     </article>
 
     <article class="card user-recent-post-card">
@@ -262,6 +248,18 @@ root.innerHTML = `
           </div>
         </div>
       `}
+
+    <div class="modal" id="badgeDetailModal" aria-hidden="true">
+      <div class="modal-content supply-request-modal" role="dialog" aria-modal="true" aria-labelledby="badgeDetailHeading">
+        <button type="button" id="closeBadgeDetailBtn" class="badge-modal-close-btn" aria-label="閉じる">&times;</button>
+        <h3 id="badgeDetailHeading">バッジの詳細</h3>
+        <div class="badge-detail-body">
+          <div class="badge-detail-row"><span class="badge-detail-label">提供物資</span><span id="badgeDetailItem" class="badge-detail-value">-</span></div>
+          <div class="badge-detail-row"><span class="badge-detail-label">付与日</span><span id="badgeDetailDate" class="badge-detail-value">-</span></div>
+          <div class="badge-detail-row"><span class="badge-detail-label">提供先</span><span id="badgeDetailFrom" class="badge-detail-value">-</span></div>
+        </div>
+      </div>
+    </div>
   </section>
 
   ${renderBottomNavHtml("board", user)}
@@ -409,4 +407,47 @@ if (!isSelf) {
       setTimeout(closeReportModal, 600);
     });
   }
+}
+
+const badgeGrid = document.getElementById("userBadgeGrid");
+const badgeDetailModal = document.getElementById("badgeDetailModal");
+const closeBadgeDetailBtn = document.getElementById("closeBadgeDetailBtn");
+const badgeDetailItem = document.getElementById("badgeDetailItem");
+const badgeDetailDate = document.getElementById("badgeDetailDate");
+const badgeDetailFrom = document.getElementById("badgeDetailFrom");
+
+function closeBadgeDetailModal() {
+  if (!badgeDetailModal) return;
+  badgeDetailModal.classList.remove("open");
+  badgeDetailModal.setAttribute("aria-hidden", "true");
+}
+
+if (badgeGrid && badgeDetailModal && badgeDetailItem && badgeDetailDate && badgeDetailFrom) {
+  badgeGrid.addEventListener("click", (event) => {
+    const tile = event.target.closest(".user-badge-icon-btn");
+    if (!tile) return;
+
+    const badgeId = String(tile.dataset.badgeId || "").trim();
+    const badge = badgeId ? gratitudeBadgeById.get(badgeId) : null;
+    if (!badge) return;
+
+    badgeDetailItem.textContent = badge.itemTitle || "投稿";
+    badgeDetailDate.textContent = badge.grantedAt ? formatDate(badge.grantedAt) : "-";
+    badgeDetailFrom.textContent = badge.grantedBy || "-";
+
+    badgeDetailModal.classList.add("open");
+    badgeDetailModal.setAttribute("aria-hidden", "false");
+  });
+}
+
+if (closeBadgeDetailBtn) {
+  closeBadgeDetailBtn.addEventListener("click", closeBadgeDetailModal);
+}
+
+if (badgeDetailModal) {
+  badgeDetailModal.addEventListener("click", (event) => {
+    if (event.target === badgeDetailModal) {
+      closeBadgeDetailModal();
+    }
+  });
 }

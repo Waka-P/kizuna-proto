@@ -43,6 +43,7 @@ root.innerHTML = `
         </select>
       </label>
       <label>エリア<input id="postArea" placeholder="例: 横浜市港北区" required /></label>
+      ${!isKitchen ? '<label>支援後に受け取りたいお礼<textarea id="postGratitudeRequest" rows="2" placeholder="例: 活動写真、子どもたちからのメッセージ"></textarea></label>' : ""}
       <label>補足メモ<textarea id="postNote" rows="3" placeholder="引き取り可能時間など"></textarea></label>
       <p id="postError" class="error hidden"></p>
       <button type="submit" class="btn ${isKitchen ? "kitchen-bg" : "provider-bg"}">投稿</button>
@@ -60,6 +61,7 @@ document.getElementById("postForm").addEventListener("submit", (e) => {
   const quantityUnit = document.getElementById("postQtyUnit").value.trim();
   const category = document.getElementById("postCat").value;
   const area = document.getElementById("postArea").value.trim();
+  const gratitudeRequest = isKitchen ? "" : document.getElementById("postGratitudeRequest")?.value.trim() || "";
   const note = document.getElementById("postNote").value.trim();
   const err = document.getElementById("postError");
 
@@ -105,6 +107,7 @@ document.getElementById("postForm").addEventListener("submit", (e) => {
     quantity: quantityUnit ? `${quantityAmount} ${quantityUnit}` : String(quantityAmount),
     category,
     area,
+    gratitudeRequest,
     note,
     author: user.displayName,
     createdAt: new Date().toISOString(),

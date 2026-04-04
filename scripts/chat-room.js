@@ -50,6 +50,12 @@ function getRequestableSupplies(state, partnerName) {
     .sort((a, b) => new Date(b.item.createdAt).getTime() - new Date(a.item.createdAt).getTime());
 }
 
+function getGratitudeTargetSupplies(state, partnerName) {
+  return (Array.isArray(state.supplies) ? state.supplies : [])
+    .filter((item) => item.author === partnerName)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
 function formatRemainingText(item, summary) {
   const unit = getItemQuantityUnit(item);
   return unit ? `残り${summary.remainingCount}${unit}` : `残り${summary.remainingCount}`;
@@ -81,10 +87,15 @@ function renderRoom() {
   const blockedByMe = isBlockedBy(state, user.displayName, partner);
   const blockedByPartner = isBlockedBy(state, partner, user.displayName);
   const conversationBlocked = isBlockedEither(state, user.displayName, partner);
-  const canOpenRequestMenu = user.mode === "KITCHEN" && !conversationBlocked;
+  const canOpenKitchenActions = user.mode === "KITCHEN" && !conversationBlocked;
+  const canOpenRequestMenu = canOpenKitchenActions;
+  const canOpenGratitudeMenu = canOpenKitchenActions;
   const requestableSupplies = canOpenRequestMenu ? getRequestableSupplies(state, partner) : [];
   const hasRequestableSupply = requestableSupplies.length > 0;
   const firstRequestableSupply = requestableSupplies[0] || null;
+  const gratitudeTargetSupplies = canOpenGratitudeMenu ? getGratitudeTargetSupplies(state, partner) : [];
+  const hasGratitudeTargetSupply = gratitudeTargetSupplies.length > 0;
+  const firstGratitudeTargetSupply = gratitudeTargetSupplies[0] || null;
 
   const root = document.getElementById("appView");
   root.classList.remove("hidden");
@@ -125,6 +136,9 @@ function renderRoom() {
                   ${canOpenRequestMenu
                     ? `<button type="button" class="compose-menu-item" data-action="request" role="menuitem" ${hasRequestableSupply ? "" : "disabled"}>リクエスト</button>`
                     : ""}
+                  ${canOpenGratitudeMenu
+                    ? `<button type="button" class="compose-menu-item" data-action="gratitude" role="menuitem" ${hasGratitudeTargetSupply ? "" : "disabled"}>お礼</button>`
+                    : ""}
                 </div>
               </div>
               <textarea id="chatText" rows="1" placeholder="メッセージを入力"></textarea>
@@ -158,6 +172,36 @@ function renderRoom() {
                 </div>
               `
               : ""}
+            ${canOpenGratitudeMenu
+              ? `
+                <div class="modal" id="chatGratitudeModal" aria-hidden="true">
+                  <div class="modal-content supply-request-modal" role="dialog" aria-modal="true" aria-labelledby="chatGratitudeHeading">
+                    <h3 id="chatGratitudeHeading">お礼</h3>
+                    <form id="chatGratitudeForm" class="supply-request-form">
+                      <label style="text-align: left;">
+                        対象の提供投稿
+                        <select id="chatGratitudeSupplyId" ${hasGratitudeTargetSupply ? "" : "disabled"}>
+                          ${gratitudeTargetSupplies.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(getItemDisplayName(item) || "未指定")}</option>`).join("")}
+                        </select>
+                      </label>
+                      <label style="text-align: left;">
+                        メッセージ
+                        <textarea id="chatGratitudeText" rows="4" placeholder="例: 温かいご支援ありがとうございました。活動の様子をお送りします。"></textarea>
+                      </label>
+                      <input type="file" id="chatGratitudeFile" class="hidden" />
+                      <button type="button" id="openGratitudeFileBtn" class="cancel-btn ghost" ${hasGratitudeTargetSupply ? "" : "disabled"}>ファイル添付</button>
+                      <p id="chatGratitudeAttachName" class="attach-name hidden"></p>
+                      <p class="sub">${hasGratitudeTargetSupply ? `対象投稿ごとに、提供者へバッジは1回のみ付与されます。` : "対象にできる提供投稿がありません。"}</p>
+                      <p id="chatGratitudeError" class="error hidden"></p>
+                      <div class="detail-actions-row">
+                        <button type="button" id="closeChatGratitudeBtn" class="cancel-btn ghost">キャンセル</button>
+                        <button type="submit" class="btn kitchen-bg submit-btn" ${hasGratitudeTargetSupply ? "" : "disabled"}>送信</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              `
+              : ""}
           </form>
         `}
     </section>
@@ -179,6 +223,7 @@ function renderRoom() {
         previousDayKey = dayKey;
 
         const request = message.type === "supply_request" ? message.request : null;
+        const gratitude = message.type === "gratitude" ? message.gratitude : null;
         const requestStatusText = request ? getRequestStatusText(request.status) : "";
         const canRespondRequest = Boolean(request)
           && user.mode === "PROVIDER"
@@ -207,6 +252,21 @@ function renderRoom() {
           `
           : "";
 
+        const gratitudeCardHtml = gratitude
+          ? `
+            <div class="request-card gratitude-card">
+              <div class="request-card-head">
+                <p class="request-card-title">お礼</p>
+              </div>
+              <p class="request-card-line">対象投稿： ${escapeHtml(gratitude.itemTitle || "-")}</p>
+              ${gratitude.message ? `<p class="request-card-line">${escapeHtml(gratitude.message)}</p>` : ""}
+              ${gratitude.attachment
+                ? `<a class="file-link" href="${gratitude.attachment.dataUrl}" download="${escapeHtml(gratitude.attachment.name)}">添付: ${escapeHtml(gratitude.attachment.name)}</a>`
+                : ""}
+            </div>
+          `
+          : "";
+
         const defaultContentHtml = !request
           ? `
             ${message.text ? `<p class="chat-message-text">${escapeHtml(message.text)}</p>` : ""}
@@ -221,12 +281,12 @@ function renderRoom() {
           </div>
         `;
 
-        if (request) {
+        if (request || gratitude) {
           return `
             ${showDaySeparator ? `<div class="chat-day-separator"><span>${date.getMonth() + 1}月${date.getDate()}日</span></div>` : ""}
             <article class="chat-request-wrap ${self ? "self" : "other"}">
               ${self ? metaHtml : ""}
-              ${requestCardHtml}
+              ${request ? requestCardHtml : gratitudeCardHtml}
               ${self ? "" : metaHtml}
             </article>
           `;
@@ -314,12 +374,20 @@ function renderRoom() {
       return;
     }
 
-    if (action !== "request") return;
+    if (action === "request") {
+      const modal = document.getElementById("chatRequestModal");
+      if (!modal) return;
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+      return;
+    }
 
-    const modal = document.getElementById("chatRequestModal");
-    if (!modal) return;
-    modal.classList.add("open");
-    modal.setAttribute("aria-hidden", "false");
+    if (action === "gratitude") {
+      const modal = document.getElementById("chatGratitudeModal");
+      if (!modal) return;
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+    }
   });
 
   chatFile.addEventListener("change", () => {
@@ -475,6 +543,133 @@ function renderRoom() {
     }
 
     refreshRequestMeta();
+  }
+
+  if (canOpenGratitudeMenu) {
+    const gratitudeModal = document.getElementById("chatGratitudeModal");
+    const closeGratitudeBtn = document.getElementById("closeChatGratitudeBtn");
+    const gratitudeForm = document.getElementById("chatGratitudeForm");
+    const gratitudeSupplyId = document.getElementById("chatGratitudeSupplyId");
+    const gratitudeText = document.getElementById("chatGratitudeText");
+    const gratitudeFile = document.getElementById("chatGratitudeFile");
+    const openGratitudeFileBtn = document.getElementById("openGratitudeFileBtn");
+    const gratitudeAttachName = document.getElementById("chatGratitudeAttachName");
+    const gratitudeError = document.getElementById("chatGratitudeError");
+
+    function clearGratitudeError() {
+      gratitudeError.classList.add("hidden");
+      gratitudeError.textContent = "";
+    }
+
+    function closeGratitudeModal() {
+      gratitudeModal.classList.remove("open");
+      gratitudeModal.setAttribute("aria-hidden", "true");
+      clearGratitudeError();
+      gratitudeText.value = "";
+      gratitudeFile.value = "";
+      gratitudeAttachName.textContent = "";
+      gratitudeAttachName.classList.add("hidden");
+    }
+
+    openGratitudeFileBtn?.addEventListener("click", () => {
+      gratitudeFile?.click();
+    });
+
+    gratitudeFile?.addEventListener("change", () => {
+      const file = gratitudeFile.files[0];
+      if (!file) {
+        gratitudeAttachName.textContent = "";
+        gratitudeAttachName.classList.add("hidden");
+        return;
+      }
+      gratitudeAttachName.textContent = `添付: ${file.name}`;
+      gratitudeAttachName.classList.remove("hidden");
+      clearGratitudeError();
+    });
+
+    closeGratitudeBtn?.addEventListener("click", closeGratitudeModal);
+
+    gratitudeModal?.addEventListener("click", (event) => {
+      if (event.target === gratitudeModal) {
+        closeGratitudeModal();
+      }
+    });
+
+    gratitudeForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const selectedSupplyId = String(gratitudeSupplyId?.value || "").trim();
+      const gratitudeMessage = String(gratitudeText?.value || "").trim();
+      const file = gratitudeFile?.files?.[0] || null;
+
+      if (!selectedSupplyId) {
+        gratitudeError.textContent = "対象の提供投稿を選択してください。";
+        gratitudeError.classList.remove("hidden");
+        return;
+      }
+
+      if (!gratitudeMessage && !file) {
+        gratitudeError.textContent = "メッセージまたは添付ファイルを設定してください。";
+        gratitudeError.classList.remove("hidden");
+        return;
+      }
+
+      let attachment = null;
+      if (file) {
+        attachment = await readFileAsDataUrl(file);
+      }
+
+      const latestState = loadState();
+      const selectedSupply = (Array.isArray(latestState.supplies) ? latestState.supplies : []).find(
+        (item) => item.id === selectedSupplyId && item.author === partner,
+      );
+      if (!selectedSupply) {
+        gratitudeError.textContent = "対象の提供投稿が見つかりません。";
+        gratitudeError.classList.remove("hidden");
+        return;
+      }
+
+      latestState.messages.push({
+        id: uid("msg"),
+        type: "gratitude",
+        sender: user.displayName,
+        receiver: partner,
+        text: "",
+        attachment: null,
+        gratitude: {
+          postId: selectedSupply.id,
+          itemTitle: getItemDisplayName(selectedSupply),
+          message: gratitudeMessage,
+          attachment,
+        },
+        createdAt: new Date().toISOString(),
+        readAt: null,
+      });
+
+      const badges = Array.isArray(latestState.badges) ? latestState.badges : [];
+      const alreadyGranted = badges.some((badge) => (
+        (badge.type === "gratitude_received" || badge.type === "donation_proof")
+        && badge.provider === partner
+        && badge.postId === selectedSupply.id
+      ));
+
+      if (!alreadyGranted) {
+        badges.push({
+          id: uid("badge"),
+          type: "donation_proof",
+          provider: partner,
+          postId: selectedSupply.id,
+          itemTitle: getItemDisplayName(selectedSupply),
+          grantedBy: user.displayName,
+          grantedAt: new Date().toISOString(),
+        });
+      }
+
+      latestState.badges = badges;
+
+      saveState(latestState);
+      closeGratitudeModal();
+      renderRoom();
+    });
   }
 }
 

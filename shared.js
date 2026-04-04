@@ -12,6 +12,7 @@ const defaultState = {
   kizuna: [],
   blocks: [],
   reports: [],
+  badges: [],
   updatedAt: new Date().toISOString(),
 };
 
@@ -34,6 +35,7 @@ function loadState() {
       kizuna: Array.isArray(parsed.kizuna) ? parsed.kizuna : [],
       blocks: Array.isArray(parsed.blocks) ? parsed.blocks : [],
       reports: Array.isArray(parsed.reports) ? parsed.reports : [],
+      badges: Array.isArray(parsed.badges) ? parsed.badges : [],
     };
   } catch (_e) {
     return structuredClone(defaultState);
@@ -214,6 +216,13 @@ function getMessagePreviewText(message) {
     const statusText = status === "approved" ? "承認済み" : status === "rejected" ? "拒否" : "確認待ち";
     if (amount) return `提供希望 ${amount} / ${statusText}`;
     return `リクエスト / ${statusText}`;
+  }
+  if (message.type === "gratitude") {
+    const gratitudeText = String(message.gratitude?.message || message.text || "").trim();
+    const hasAttachment = Boolean(message.gratitude?.attachment || message.attachment);
+    if (gratitudeText) return `お礼: ${gratitudeText}`;
+    if (hasAttachment) return "お礼（添付あり）";
+    return "お礼";
   }
   if (message.text) return message.text;
   if (message.attachment) return "添付ファイル";
