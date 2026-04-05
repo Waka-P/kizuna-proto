@@ -10,6 +10,7 @@ const defaultState = {
   rooms: [],
   users: [],
   kizuna: [],
+  postKizuna: [],
   blocks: [],
   reports: [],
   badges: [],
@@ -33,6 +34,7 @@ function loadState() {
       messages: Array.isArray(parsed.messages) ? parsed.messages : [],
       users: Array.isArray(parsed.users) ? parsed.users : [],
       kizuna: Array.isArray(parsed.kizuna) ? parsed.kizuna : [],
+      postKizuna: Array.isArray(parsed.postKizuna) ? parsed.postKizuna : [],
       blocks: Array.isArray(parsed.blocks) ? parsed.blocks : [],
       reports: Array.isArray(parsed.reports) ? parsed.reports : [],
       badges: Array.isArray(parsed.badges) ? parsed.badges : [],
@@ -303,6 +305,59 @@ function toggleKizuna(state, fromName, toName) {
   return true;
 }
 
+function isPostKizuna(state, fromName, postType, postId) {
+  if (!fromName || !postId) return false;
+  const normalizedType = postType === "need" ? "need" : "supply";
+  const list = Array.isArray(state?.postKizuna) ? state.postKizuna : [];
+  return list.some((entry) => (
+    entry.from === fromName
+    && entry.postType === normalizedType
+    && entry.postId === postId
+  ));
+}
+
+function getPostKizunaCount(state, postType, postId) {
+  if (!postId) return 0;
+  const normalizedType = postType === "need" ? "need" : "supply";
+  const list = Array.isArray(state?.postKizuna) ? state.postKizuna : [];
+  const names = new Set(
+    list
+      .filter((entry) => entry.postType === normalizedType && entry.postId === postId && entry.from)
+      .map((entry) => entry.from),
+  );
+  return names.size;
+}
+
+function togglePostKizuna(state, fromName, postType, postId) {
+  if (!fromName || !postId) {
+    return false;
+  }
+
+  const normalizedType = postType === "need" ? "need" : "supply";
+  const list = Array.isArray(state.postKizuna) ? state.postKizuna : [];
+  const index = list.findIndex((entry) => (
+    entry.from === fromName
+    && entry.postType === normalizedType
+    && entry.postId === postId
+  ));
+
+  if (index >= 0) {
+    list.splice(index, 1);
+    state.postKizuna = list;
+    return false;
+  }
+
+  list.push({
+    id: uid("post_kizuna"),
+    from: fromName,
+    postType: normalizedType,
+    postId,
+    createdAt: new Date().toISOString(),
+  });
+  state.postKizuna = list;
+  return true;
+}
+
 function isBlockedBy(state, ownerName, targetName) {
   if (!ownerName || !targetName || ownerName === targetName) return false;
   const list = Array.isArray(state?.blocks) ? state.blocks : [];
@@ -450,6 +505,9 @@ window.KizunaShared = {
   isKizuna,
   getKizunaCount,
   toggleKizuna,
+  isPostKizuna,
+  getPostKizunaCount,
+  togglePostKizuna,
   isBlockedBy,
   isBlockedEither,
   toggleBlock,

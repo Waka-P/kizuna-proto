@@ -12,6 +12,8 @@ const {
   getItemQuantityUnit,
   formatItemQuantity,
   isBlockedEither,
+  isPostKizuna,
+  togglePostKizuna,
   escapeHtml,
   formatDate,
 } = window.KizunaShared;
@@ -134,6 +136,7 @@ function renderPage(editMode = false) {
   const canSendSupplyRequest = !isOwnPost && !isBlocked && user.mode === "KITCHEN" && type === "supply";
   const supplyAmountLimit = canSendSupplyRequest ? supplySummary.maxCount : null;
   const supplyRemainingAmount = canSendSupplyRequest ? supplySummary.remainingCount : null;
+  const postKizunaByMe = !isOwnPost && isPostKizuna(state, user.displayName, type, item.id);
   const backHref = getBackHref(isOwnPost);
   const authorInitial = (item.author || "?").slice(0, 1);
   const userDetailHref = `./user-detail.html?name=${encodeURIComponent(item.author || "")}&from=post-detail&type=${encodeURIComponent(type)}&id=${encodeURIComponent(item.id)}`;
@@ -317,6 +320,9 @@ function renderPage(editMode = false) {
               ${isBlocked
                 ? `<button class="btn ${modeButtonClass} detail-chat-btn" type="button" disabled>チャット</button>`
                 : `<a class="btn ${modeButtonClass} detail-chat-btn" href="./chat-room.html?partner=${encodeURIComponent(item.author)}">チャット</a>`}
+              <button id="postKizunaToggleBtn" class="detail-post-kizuna-btn ${postKizunaByMe ? "active" : ""}" type="button" aria-label="キズナ" title="キズナ" ${isBlocked ? "disabled" : ""}>
+                <i class="${postKizunaByMe ? "fa-solid" : "fa-regular"} fa-star" aria-hidden="true"></i>
+              </button>
             </div>
             ${isBlocked
               ? '<p class="sub">ブロック状態のため、チャット・リクエストは利用できません。</p>'
@@ -371,6 +377,21 @@ function renderPage(editMode = false) {
     });
 
     return;
+  }
+
+  const postKizunaToggleBtn = document.getElementById("postKizunaToggleBtn");
+  if (postKizunaToggleBtn) {
+    postKizunaToggleBtn.addEventListener("click", () => {
+      const latestState = loadState();
+      if (isBlockedEither(latestState, user.displayName, item.author)) {
+        alert("ブロック中のユーザーの投稿にはキズナできません。");
+        return;
+      }
+
+      togglePostKizuna(latestState, user.displayName, type, item.id);
+      saveState(latestState);
+      renderPage(false);
+    });
   }
 
   if (canSendSupplyRequest && supplyAmountLimit && supplyRemainingAmount > 0) {
