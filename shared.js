@@ -151,9 +151,38 @@ function readFileAsDataUrl(file) {
 function renderHeaderHtml(user, title) {
   const isKitchen = user.mode === "KITCHEN";
   const modeText = isKitchen ? "子ども食堂" : "提供者";
+  const pageName = location.pathname.split("/").pop() || "";
+  const boardLabel = isKitchen ? "余剰物資一覧" : "子ども食堂掲示板";
+  const navItems = [
+    { href: "./board.html", label: "ホーム", icon: "home", active: pageName === "board.html" },
+    { href: "./board-list.html", label: boardLabel, icon: "format_list_bulleted", active: pageName === "board-list.html" },
+    { href: "./board-my-posts.html", label: "自分の投稿", icon: "edit_square", active: pageName === "board-my-posts.html" },
+    { href: "./chat.html", label: "チャット", icon: "chat_bubble", active: pageName === "chat.html" || pageName === "chat-room.html" },
+    ...(!isKitchen ? [{ href: "./board-map.html", label: "マップ", icon: "map", active: pageName === "board-map.html" }] : []),
+    { dividerBefore: true, href: "./settings.html", label: "設定", icon: "settings", active: pageName === "settings.html" },
+    { href: "./index.html", label: "ログアウト", icon: "logout", active: false, logout: true },
+  ];
+
   return `
     <header class="header-row">
-      <div>
+      <div class="header-left-group">
+        <div class="header-menu-wrapper" aria-label="メニュー">
+          <input type="checkbox" id="headerMenuToggle" class="header-menu-toggle" hidden>
+
+          <label class="header-menu-icon" for="headerMenuToggle" aria-label="メニューを開閉" role="button">
+            <span></span>
+            <span></span>
+            <span></span>
+          </label>
+
+          <label class="header-menu-overlay" for="headerMenuToggle" aria-hidden="true"></label>
+
+          <nav class="header-menu-panel" aria-label="ページメニュー">
+            <ul>
+              ${navItems.map((item) => `${item.dividerBefore ? '<li class="header-menu-divider" aria-hidden="true"></li>' : ""}<li><a href="${item.href}" class="${item.active ? "active" : ""}" ${item.logout ? "data-logout=\"true\"" : ""}><span class="header-menu-item-icon material-symbols-outlined" aria-hidden="true">${item.icon}</span><span class="header-menu-item-label">${item.label}</span></a></li>`).join("")}
+            </ul>
+          </nav>
+        </div>
         <h1>${title || "きずな〇〇"}</h1>
       </div>
       <span class="status-badge ${isKitchen ? "kitchen" : "provider"}">${modeText}</span>
@@ -477,6 +506,14 @@ function openModeSwitchModal({ user, onApply }) {
     if (e.target === modal) closeModal();
   }, { once: true });
 }
+
+document.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const logoutLink = target.closest("a[data-logout='true']");
+  if (!logoutLink) return;
+  clearUser();
+});
 
 window.KizunaShared = {
   CATEGORIES,

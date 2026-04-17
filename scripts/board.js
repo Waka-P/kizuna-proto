@@ -24,6 +24,7 @@ if (!user) {
 const boardListLabel = user.mode === "KITCHEN" ? "余剰物資一覧" : "子ども食堂掲示板";
 const ownModeClass = user.mode === "KITCHEN" ? "kitchen" : "provider";
 const boardListModeClass = user.mode === "KITCHEN" ? "provider" : "kitchen";
+const boardListIllustrationSrc = user.mode === "KITCHEN" ? "./images/company.png" : "./images/kodomo.png";
 const isKitchenMode = user.mode === "KITCHEN";
 const hasLowerPanel = true;
 
@@ -270,13 +271,19 @@ root.innerHTML = `
 
   <section class="board-menu-container ${hasLowerPanel ? "board-menu-container-split" : ""}" aria-label="一覧ページリンク">
     <div class="board-menu-stack">
-      <a class="board-menu-link board-menu-link-${boardListModeClass}" href="./board-list.html">
-        <span class="board-menu-link-main">${boardListLabel}</span>
-        <span class="board-menu-link-sub">投稿一覧を表示</span>
+      <a class="board-menu-link board-menu-link-${boardListModeClass} board-menu-link-with-illustration" href="./board-list.html">
+        <span class="board-menu-link-text">
+          <span class="board-menu-link-main">${boardListLabel}</span>
+          <span class="board-menu-link-sub">投稿一覧を表示</span>
+        </span>
+        <img class="board-menu-link-illustration" src="${boardListIllustrationSrc}" alt="" aria-hidden="true">
       </a>
-      <a class="board-menu-link board-menu-link-${ownModeClass}" href="./board-my-posts.html">
-        <span class="board-menu-link-main">自分の投稿</span>
-        <span class="board-menu-link-sub">自分の投稿一覧を表示</span>
+      <a class="board-menu-link board-menu-link-${ownModeClass} board-menu-link-own" href="./board-my-posts.html">
+        <i class="fa-solid fa-user-pen board-menu-link-own-icon" aria-hidden="true"></i>
+        <span class="board-menu-link-text">
+          <span class="board-menu-link-main">自分の投稿</span>
+          <span class="board-menu-link-sub">自分の投稿一覧を表示</span>
+        </span>
       </a>
     </div>
     ${isKitchenMode
