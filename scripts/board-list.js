@@ -149,19 +149,19 @@ function getFilterSummaryText() {
   const parts = [`${SORT_LABELS[sortState.order] || SORT_LABELS.newest}`];
 
   if (filterState.category !== "all") {
-    parts.push(`カテゴリ: ${filterState.category}`);
+    parts.push(`${filterState.category}`);
   }
 
   if (boardItemType === "supply") {
     if (filterState.trade === "in_progress") {
-      parts.push("取引状況: 取引中のみ");
+      parts.push("取引中のみ");
     } else if (filterState.trade === "open") {
-      parts.push("取引状況: 募集中のみ");
+      parts.push("募集中のみ");
     }
   }
 
   if (filterState.keyword.trim()) {
-    parts.push(`キーワード: ${filterState.keyword.trim()}`);
+    parts.push(`${filterState.keyword.trim()}`);
   }
 
   return parts.join(" / ");

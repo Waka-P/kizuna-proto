@@ -516,6 +516,21 @@ document.addEventListener("click", (event) => {
   clearUser();
 });
 
+function syncHeaderMenuScrollLock() {
+  const menuToggle = document.getElementById("headerMenuToggle");
+  const shouldLock = menuToggle instanceof HTMLInputElement && menuToggle.checked;
+  document.body.classList.toggle("header-menu-open", shouldLock);
+}
+
+document.addEventListener("change", (event) => {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  if (target.id !== "headerMenuToggle") return;
+  syncHeaderMenuScrollLock();
+});
+
+window.addEventListener("pageshow", syncHeaderMenuScrollLock);
+
 window.KizunaShared = {
   CATEGORIES,
   uid,
