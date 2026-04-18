@@ -689,8 +689,8 @@
   display: none;
   align-items: flex-end;
   justify-content: center;
-  padding: 0 10px 14px;
-  z-index: 9999;
+  padding: 0;
+  z-index: 12000;
 }
 
 .modal.open { display: flex; }
@@ -709,6 +709,76 @@
 
 .supply-request-modal {
   border-radius: 20px;
+}
+
+.board-filter-modal {
+  position: relative;
+  width: min(430px, 100%);
+  max-height: min(62dvh, 560px);
+  overflow: auto;
+  border-radius: 20px 20px 0 0;
+  border-bottom: none;
+  padding: 1.2rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+  text-align: left;
+  gap: 14px;
+}
+
+#boardFilterModal {
+  z-index: 2147483000;
+}
+
+#boardFilterModal .board-filter-modal {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(430px, 100dvw);
+  z-index: 2147483001;
+}
+
+.board-filter-modal h3 {
+  margin: 0;
+  text-align: center;
+}
+
+.board-filter-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid #e4d6c2;
+  background: #fff7eb;
+  color: #6d562f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.board-filter-close .material-symbols-outlined {
+  font-size: 1rem;
+}
+
+.board-filter-form {
+  display: grid;
+  gap: 10px;
+}
+
+.board-filter-form label {
+  display: grid;
+  gap: 5px;
+  font-size: 0.88rem;
+  color: #5d4a2f;
+}
+
+.board-filter-form input,
+.board-filter-form select {
+  min-height: 38px;
+}
+
+.board-filter-actions {
+  margin-top: 4px;
 }
 
 .supply-request-form {
@@ -1444,7 +1514,7 @@
   border-radius: 14px;
   background: #fffefc;
   min-height: 112px;
-  padding: 1rem 2.2rem;
+  padding: 1rem 2.1rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1461,6 +1531,7 @@
 .board-menu-link-main {
   font-weight: 700;
   font-size: 1.1rem;
+  white-space: nowrap;
 }
 
 .board-menu-link-with-illustration {
@@ -1622,6 +1693,10 @@
   padding-inline: 0.25rem;
 }
 
+.board-list-page {
+  isolation: auto;
+}
+
 .board-list-page::before,
 .post-detail-shell::before,
 .post-compose-page::before {
@@ -1671,6 +1746,132 @@
 
 .post-feed-hero h2 {
   font-size: 1.18rem;
+}
+
+.board-list-hero {
+  grid-template-columns: 48px 1fr auto;
+  align-items: start;
+}
+
+.post-feed-hero-actions {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  justify-self: end;
+  gap: 0.75rem;
+  margin: auto 0.6rem -0.2rem 0;
+}
+
+.post-feed-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #8f6930;
+  border-radius: 0;
+  min-height: fit-content;
+  min-width: fit-content;
+  width: fit-content;
+  height: fit-content;
+  padding: 0;
+}
+
+.apply {
+  flex: 1;
+}
+
+.post-feed-icon-btn .material-symbols-outlined {
+  font-size: 1.65rem;
+}
+
+.post-feed-icon-btn:hover,
+.post-feed-icon-btn:focus-visible {
+  color: #6f4b16;
+}
+
+.post-feed-icon-btn:focus-visible {
+  outline: 2px solid #c58a2f;
+  outline-offset: 2px;
+}
+
+.post-feed-icon-btn.has-active-filters::after {
+  content: attr(data-active-count);
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #cf4b2a;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+.board-sort-wrap {
+  position: relative;
+}
+
+.board-sort-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 120;
+  min-width: 170px;
+  border: 1px solid #e5d5bf;
+  border-radius: 12px;
+  background: #fffdf9;
+  box-shadow: 0 10px 20px rgba(73, 54, 24, 0.16);
+  overflow: hidden;
+  display: grid;
+}
+
+.board-sort-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #5f4622;
+  text-align: left;
+  font-size: 0.86rem;
+  padding: 10px 12px;
+}
+
+.board-sort-option + .board-sort-option {
+  border-top: 1px solid #f0e3d1;
+}
+
+.board-sort-option.active {
+  background: #fff2dc;
+  font-weight: 700;
+}
+
+.board-sort-option.active::after {
+  content: "check";
+  font-family: "Material Symbols Outlined";
+  font-size: 1rem;
+  color: #906525;
+}
+
+.board-filter-summary {
+  margin: -0.35rem 0 0.7rem 0.5rem;
+  font-size: 0.82rem;
+  color: #7f653f;
+}
+
+.list-fact-pill.list-fact-pill-trading {
+  border-color: #e7caa0;
+  background: #fff4e2;
+  color: #7f4f11;
 }
 
 .post-feed-empty {
@@ -2021,6 +2222,21 @@
 
   .post-feed-hero {
     grid-template-columns: 40px 1fr;
+  }
+
+  .board-list-hero {
+    grid-template-columns: 40px 1fr auto;
+  }　
+
+  .post-feed-hero-actions {
+    justify-content: flex-end;
+    margin-top: auto;
+  }
+
+  .board-sort-dropdown {
+    right: 0;
+    left: auto;
+    min-width: 160px;
   }
 
   .post-feed-hero-icon {
