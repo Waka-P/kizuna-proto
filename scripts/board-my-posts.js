@@ -41,8 +41,17 @@ root.classList.remove("hidden");
 root.innerHTML = `
   ${renderHeaderHtml(user, "自分の投稿")}
 
-  <section class="board-section-container board-list-page">
+  <section class="board-section-container board-list-page my-posts-page">
     <a class="detail-page-back" href="./board.html"><span>&lang;</span>戻る</a>
+    <article class="post-feed-hero" aria-label="自分の投稿の案内">
+      <div class="post-feed-hero-icon" aria-hidden="true">
+        <span class="material-symbols-outlined">edit_square</span>
+      </div>
+      <div class="post-feed-hero-copy">
+        <p class="post-feed-hero-eyebrow">MY POSTS</p>
+        <h2>自分の投稿</h2>
+      </div>
+    </article>
     <div id="myPostList" class="list"></div>
   </section>
 
@@ -51,7 +60,12 @@ root.innerHTML = `
 
 const myPostRoot = document.getElementById("myPostList");
 if (!ownPosts.length) {
-  myPostRoot.innerHTML = `<p class="sub">まだ自分の投稿はありません</p>`;
+  myPostRoot.innerHTML = `
+    <article class="card post-feed-empty">
+      <span class="material-symbols-outlined" aria-hidden="true">draft</span>
+      <p class="sub">まだ自分の投稿はありません</p>
+    </article>
+  `;
 } else {
   myPostRoot.innerHTML = ownPosts
     .map((item) => {
@@ -64,16 +78,19 @@ if (!ownPosts.length) {
         <a class="list-item-link" href="${detailHref}">
           <article class="list-item list-item-compact">
             <div class="row list-item-top-row">
-              <strong class="list-item-title">${escapeHtml(getItemDisplayName(item) || "未指定")}</strong>
+              <div class="list-item-title-wrap">
+                <span class="material-symbols-outlined list-item-title-icon" aria-hidden="true">inventory_2</span>
+                <strong class="list-item-title">${escapeHtml(getItemDisplayName(item) || "未指定")}</strong>
+              </div>
               <span class="chip list-item-category-chip">${escapeHtml(item.category || "未分類")}</span>
             </div>
             <div class="list-item-facts">
-              <span class="list-fact-pill">${escapeHtml(quantityText)}</span>
-              <span class="list-fact-pill">${escapeHtml(item.area || "未設定")}</span>
+              <span class="list-fact-pill"><span class="material-symbols-outlined" aria-hidden="true">deployed_code</span>${escapeHtml(quantityText)}</span>
+              <span class="list-fact-pill"><span class="material-symbols-outlined" aria-hidden="true">distance</span>${escapeHtml(item.area || "未設定")}</span>
             </div>
             ${item.note ? `<p class="list-note-preview">${escapeHtml(item.note)}</p>` : ""}
             <div class="list-meta-line list-meta-line-own">
-              <div class="list-meta-date">${formatDate(item.createdAt)}</div>
+              <div class="list-meta-date"><span class="material-symbols-outlined" aria-hidden="true">schedule</span>${formatDate(item.createdAt)}</div>
             </div>
           </article>
         </a>

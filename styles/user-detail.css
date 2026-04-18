@@ -3,14 +3,24 @@
   gap: 12px;
 }
 
+.user-detail-hero {
+  margin-bottom: 2px;
+}
+
 .user-profile-card {
-    position: relative;
+  position: relative;
   gap: 14px;
+}
+
+.user-profile-card.user-profile-card-emphasis {
+  border-radius: 18px;
+  padding: 1rem;
+  background: linear-gradient(180deg, #fffdfa 0%, #fff8ee 100%);
 }
 
 .user-profile-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
 }
 
@@ -47,7 +57,7 @@
 }
 
 .user-profile-main h2 {
-    padding: 0.5rem 0 0 0;
+  padding: 0.25rem 0 0;
   overflow-wrap: anywhere;
 }
 
@@ -80,6 +90,8 @@
 .user-profile-meta {
   display: grid;
   gap: 6px;
+  border-top: 1px dashed #e6cfaf;
+  padding-top: 10px;
 }
 
 .user-profile-meta p {
@@ -90,6 +102,7 @@
 
 .user-profile-meta strong {
   margin-right: 0.3rem;
+  color: #6b5030;
 }
 
 .user-action-stack {
@@ -120,7 +133,7 @@
 }
 
 .user-relation-note {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
 }
 
 .kizuna-toggle-btn {
@@ -215,6 +228,21 @@
   gap: 10px;
 }
 
+.user-badge-card h3,
+.user-recent-post-card h3 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6f4f22;
+}
+
+.user-badge-card h3 .material-symbols-outlined,
+.user-recent-post-card h3 .material-symbols-outlined {
+  font-size: 1.28rem;
+  color: #8c6322;
+}
+
 .user-badge-card h3 {
   margin-bottom: 2px;
 }
@@ -259,7 +287,7 @@
   border-radius: 999px;
   background: linear-gradient(180deg, #ffeecb 0%, #ffd88e 100%);
   color: #7f5c14;
-  font-size: 1.05rem;
+  font-size: 1rem;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
@@ -326,16 +354,14 @@
 }
 
 .user-status-badge {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    text-align: center;
+  text-align: center;
   font-size: 0.82rem;
   font-weight: 700;
   border-radius: 999px;
   padding: 4px 0.9rem;
   border: 1px solid transparent;
   white-space: nowrap;
+  margin-top: 0.3rem;
 }
 
 .user-status-badge.unknown {
@@ -356,6 +382,18 @@
 }
 
 @media (max-width: 480px) {
+  .user-profile-head {
+    flex-wrap: wrap;
+  }
+
+  .user-profile-main {
+    flex: 1;
+  }
+
+  .user-status-badge {
+    margin: 0 0 0 auto;
+  }
+
   .user-action-top-row {
     grid-template-columns: 1fr auto;
   }

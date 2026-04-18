@@ -47,6 +47,15 @@ root.innerHTML = `
 
   <section class="board-section-container board-list-page">
     <a class="detail-page-back" href="./board.html"><span>&lang;</span>戻る</a>
+    <article class="post-feed-hero" aria-label="投稿一覧の案内">
+      <div class="post-feed-hero-icon" aria-hidden="true">
+        <span class="material-symbols-outlined">overview</span>
+      </div>
+      <div class="post-feed-hero-copy">
+        <p class="post-feed-hero-eyebrow">POST FEED</p>
+        <h2>${boardTitle}</h2>
+      </div>
+    </article>
     <div id="boardList" class="list"></div>
   </section>
 
@@ -55,7 +64,12 @@ root.innerHTML = `
 
 const boardRoot = document.getElementById("boardList");
 if (!boardItems.length) {
-  boardRoot.innerHTML = `<p class="sub">投稿がまだありません</p>`;
+  boardRoot.innerHTML = `
+    <article class="card post-feed-empty">
+      <span class="material-symbols-outlined" aria-hidden="true">forum</span>
+      <p class="sub">投稿がまだありません</p>
+    </article>
+  `;
 } else {
   boardRoot.innerHTML = boardItems
     .map((item) => {
@@ -70,12 +84,15 @@ if (!boardItems.length) {
 
       const detailBodyHtml = `
         <div class="row list-item-top-row">
-          <strong class="list-item-title">${escapeHtml(getItemDisplayName(item) || "未指定")}</strong>
+          <div class="list-item-title-wrap">
+            <span class="material-symbols-outlined list-item-title-icon" aria-hidden="true">inventory_2</span>
+            <strong class="list-item-title">${escapeHtml(getItemDisplayName(item) || "未指定")}</strong>
+          </div>
           <span class="chip list-item-category-chip">${escapeHtml(item.category || "未分類")}</span>
         </div>
         <div class="list-item-facts">
-          <span class="list-fact-pill">${escapeHtml(quantityText)}</span>
-          <span class="list-fact-pill">${escapeHtml(item.area || "未設定")}</span>
+          <span class="list-fact-pill"><span class="material-symbols-outlined" aria-hidden="true">deployed_code</span>${escapeHtml(quantityText)}</span>
+          <span class="list-fact-pill"><span class="material-symbols-outlined" aria-hidden="true">distance</span>${escapeHtml(item.area || "未設定")}</span>
         </div>
         ${boardItemType === "supply" && item.gratitudeRequest
           ? `<p class="list-note-preview">希望するお礼: ${escapeHtml(item.gratitudeRequest)}</p>`
@@ -84,20 +101,14 @@ if (!boardItems.length) {
       `;
 
       const cardHtml = `
-        <article class="list-item list-item-compact">
-          ${isOwnPost
-            ? detailBodyHtml
-            : `<a class="list-item-main-link" href="${detailHref}">${detailBodyHtml}</a>`}
-          <div class="list-meta-line${isOwnPost ? " list-meta-line-own" : ""}">
-            ${isOwnPost
-              ? ""
-              : `
-                <a class="meta-author meta-author-link" href="${userDetailHref}">
-                  <span class="author-icon" aria-hidden="true">${escapeHtml(authorInitial)}</span>
-                  <span>${escapeHtml(item.author)}</span>
-                </a>
-              `}
-            <div class="list-meta-date">${formatDate(item.createdAt)}</div>
+        <article class="list-item list-item-compact list-item-clickable" role="link" tabindex="0" data-detail-href="${detailHref}">
+          ${detailBodyHtml}
+          <div class="list-meta-line">
+            <a class="meta-author meta-author-link" href="${userDetailHref}">
+              <span class="author-icon" aria-hidden="true">${escapeHtml(authorInitial)}</span>
+              <span>${escapeHtml(item.author)}</span>
+            </a>
+            <div class="list-meta-date"><span class="material-symbols-outlined" aria-hidden="true">schedule</span>${formatDate(item.createdAt)}</div>
           </div>
         </article>
       `;
@@ -105,4 +116,30 @@ if (!boardItems.length) {
       return cardHtml;
     })
     .join("");
+
+  boardRoot.querySelectorAll(".list-item-clickable").forEach((itemEl) => {
+    const moveToDetail = () => {
+      const href = itemEl.getAttribute("data-detail-href");
+      if (href) {
+        window.location.href = href;
+      }
+    };
+
+    itemEl.addEventListener("click", (event) => {
+      if (event.target.closest("a")) {
+        return;
+      }
+      moveToDetail();
+    });
+
+    itemEl.addEventListener("keydown", (event) => {
+      if (event.target.closest("a")) {
+        return;
+      }
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        moveToDetail();
+      }
+    });
+  });
 }

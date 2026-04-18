@@ -30,16 +30,16 @@ function renderBlockedListSectionHtml() {
 
   if (!blockedEntries.length) {
     return `
-      <article class="card">
-        <h2>ブロックリスト</h2>
+      <article class="card settings-card settings-card-blocked">
+        <h2 class="settings-section-title"><span class="settings-section-icon material-symbols-outlined" aria-hidden="true">block</span>ブロックリスト</h2>
         <p class="sub">現在ブロックしているユーザーはいません。</p>
       </article>
     `;
   }
 
   return `
-    <article class="card">
-      <h2>ブロックリスト</h2>
+    <article class="card settings-card settings-card-blocked">
+      <h2 class="settings-section-title"><span class="settings-section-icon material-symbols-outlined" aria-hidden="true">block</span>ブロックリスト</h2>
       <p class="sub">ブロック解除すると、再びチャットやキズナが可能になります。</p>
       <div id="blockedList" class="list">
         ${blockedEntries.map((entry) => {
@@ -53,7 +53,7 @@ function renderBlockedListSectionHtml() {
                   <span class="author-icon" aria-hidden="true">${iconDataUrl ? `<img src="${iconDataUrl}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:999px;"/>` : escapeHtml(initial)}</span>
                   <span>${escapeHtml(entry.target)}</span>
                 </div>
-                <button class="ghost" type="button" data-unblock-target="${escapeHtml(entry.target)}">ブロック解除</button>
+                <button class="ghost settings-inline-action" type="button" data-unblock-target="${escapeHtml(entry.target)}"><span class="material-symbols-outlined" aria-hidden="true">person_remove</span><span>ブロック解除</span></button>
               </div>
             </article>
           `;
@@ -68,9 +68,19 @@ root.classList.remove("hidden");
 root.innerHTML = `
   ${renderHeaderHtml(user, "設定")}
 
-  <section class="settings-container">
-    <article class="card">
-      <h2>プロフィール設定</h2>
+  <section class="settings-container settings-page">
+    <article class="settings-hero">
+      <div class="settings-hero-icon" aria-hidden="true">
+        <span class="material-symbols-outlined">settings</span>
+      </div>
+      <div class="settings-hero-copy">
+        <p class="post-compose-eyebrow">SETTINGS</p>
+        <h2>設定</h2>
+      </div>
+    </article>
+
+    <article class="card settings-card settings-card-profile">
+      <h2 class="settings-section-title"><span class="settings-section-icon material-symbols-outlined" aria-hidden="true">badge</span>プロフィール設定</h2>
       <form id="profileForm" class="settings-profile-form">
         <div class="label-container">
           <span class="settings-label-with-icon">
@@ -78,43 +88,42 @@ root.innerHTML = `
               <span id="profileIconPreview" class="profile-icon-preview">?</span>
             </button>
           </span>
-          <label>
-            表示名
+          <label class="settings-field">
+            <span class="settings-field-label"><span class="material-symbols-outlined" aria-hidden="true">person</span>表示名</span>
             <input id="profileDisplayName" maxlength="40" value="${escapeHtml(user.displayName || "")}" placeholder="例: ひまわり食堂" />
           </label>
           <input id="profileIconFile" type="file" accept="image/*" class="hidden" />
         </div>
-        <label>
-          連絡先（任意）
+        <label class="settings-field">
+          <span class="settings-field-label"><span class="material-symbols-outlined" aria-hidden="true">call</span>連絡先（任意）</span>
           <input id="profileContact" maxlength="120" value="${escapeHtml(user.contact || "")}" placeholder="例: info@example.com" />
         </label>
-        <label>
-          住所（任意）
+        <label class="settings-field">
+          <span class="settings-field-label"><span class="material-symbols-outlined" aria-hidden="true">location_on</span>住所（任意）</span>
           <input id="profileAddress" maxlength="120" value="${escapeHtml(user.address || "")}" placeholder="例: 東京都渋谷区〇〇1-2-3" />
         </label>
-        <label>
-          自己紹介（任意）
+        <label class="settings-field">
+          <span class="settings-field-label"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span>自己紹介（任意）</span>
           <textarea id="profileBio" rows="3" maxlength="300" placeholder="活動内容や対応できる物資などを入力">${escapeHtml(user.bio || "")}</textarea>
         </label>
         <p id="profileError" class="error hidden"></p>
         <p id="profileSaved" class="sub hidden">プロフィールを保存しました。</p>
-        <button id="saveProfile" class="btn ${user.mode === "KITCHEN" ? "kitchen-bg" : "provider-bg"}" type="submit">プロフィールを保存</button>
+        <button id="saveProfile" class="btn settings-primary-btn ${user.mode === "KITCHEN" ? "kitchen-bg" : "provider-bg"}" type="submit"><span>プロフィールを保存</span></button>
       </form>
     </article>
 
-    <article class="card">
-      <h2>モード切替</h2>
-      <p class="sub">現在のモード：${user.mode === "KITCHEN" ? "子ども食堂" : "提供者"}</p>
-      <button id="openSwitch" class="ghost" type="button">モードを切り替える</button>
+    <article class="card settings-card settings-card-mode">
+      <h2 class="settings-section-title"><span class="settings-section-icon material-symbols-outlined" aria-hidden="true">toggle_on</span>モード切替</h2>
+      <button id="openSwitch" class="ghost settings-main-action" type="button"><span class="material-symbols-outlined" aria-hidden="true">sync_alt</span><span>モードを切り替える</span></button>
     </article>
 
     ${renderBlockedListSectionHtml()}
 
-    <article class="card detail-actions-card">
-      <h2>データ管理</h2>
+    <article class="card detail-actions-card settings-card settings-card-danger">
+      <h2 class="settings-section-title"><span class="settings-section-icon material-symbols-outlined" aria-hidden="true">shield_person</span>データ管理</h2>
       <p class="sub">ローカルデータの初期化とログアウトができます。</p>
-      <button id="resetData" class="ghost" type="button">データを初期化</button>
-      <button id="logout" class="ghost" type="button">ログアウト</button>
+      <button id="resetData" class="ghost settings-main-action" type="button"><span class="material-symbols-outlined" aria-hidden="true">restart_alt</span><span>データを初期化</span></button>
+      <button id="logout" class="ghost settings-main-action settings-danger-action" type="button"><span class="material-symbols-outlined" aria-hidden="true">logout</span><span>ログアウト</span></button>
     </article>
   </section>
 

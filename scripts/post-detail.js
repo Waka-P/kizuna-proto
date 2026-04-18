@@ -36,7 +36,7 @@ function renderDetailHeaderHtml(title) {
   return `
     <header class="header-row">
       <div>
-        <h1>${escapeHtml(title || "きずな〇〇")}</h1>
+        <h1>${escapeHtml(title)}</h1>
       </div>
     </header>
   `;
@@ -150,7 +150,7 @@ function renderPage(editMode = false) {
 
       <section>
         <a class="detail-page-back" href="${backHref}"><span>&lang;</span>一覧へ戻る</a>
-        <form class="card" id="editPostForm">
+        <form class="card post-edit-form" id="editPostForm">
           <h2>自分の投稿を編集</h2>
           <label>物資名<input id="editItemName" value="${escapeHtml(getItemDisplayName(item))}" required /></label>
           <label>数量
@@ -254,12 +254,12 @@ function renderPage(editMode = false) {
   root.innerHTML = `
     ${renderDetailHeaderHtml("投稿詳細")}
 
-    <section class="post-detail-page">
+    <section class="post-detail-page post-detail-shell">
       <a class="detail-page-back" href="${backHref}"><span>&lang;</span>一覧へ戻る</a>
       <article class="card detail-card-emphasis">
         <div class="detail-headline">
           <div class="detail-title-stack">
-            <p class="detail-kind-label">${type === "supply" ? "余剰物資" : "ニーズ"}</p>
+            <p class="detail-kind-label"><span class="material-symbols-outlined" aria-hidden="true">local_offer</span>${type === "supply" ? "余剰物資" : "ニーズ"}</p>
             <h2>${escapeHtml(getItemDisplayName(item) || "未指定")}</h2>
           </div>
           <span class="chip detail-category-chip">${escapeHtml(item.category || "未分類")}</span>
@@ -267,9 +267,11 @@ function renderPage(editMode = false) {
 
         <div class="detail-facts-grid">
           <div class="detail-fact-block">
+            <span class="detail-fact-label"><span class="material-symbols-outlined" aria-hidden="true">deployed_code</span>数量</span>
             <strong>${escapeHtml(quantityText)}</strong>
           </div>
-          <div class="area-block">
+          <div class="detail-fact-block detail-area-block">
+            <span class="detail-fact-label"><span class="material-symbols-outlined" aria-hidden="true">distance</span>エリア</span>
             <strong>${escapeHtml(item.area || "未設定")}</strong>
           </div>
         </div>
@@ -277,7 +279,7 @@ function renderPage(editMode = false) {
         ${item.note
           ? `
             <section class="detail-note-section" aria-label="投稿メモ">
-              <h3>メモ</h3>
+              <h3><span class="material-symbols-outlined" aria-hidden="true">notes</span>メモ</h3>
               <p>${escapeHtml(item.note)}</p>
             </section>
           `
@@ -286,7 +288,7 @@ function renderPage(editMode = false) {
         ${item.gratitudeRequest
           ? `
             <section class="detail-note-section" aria-label="お礼の希望">
-              <h3>支援後に受け取りたいお礼</h3>
+              <h3><span class="material-symbols-outlined" aria-hidden="true">redeem</span>支援後に受け取りたいお礼</h3>
               <p>${escapeHtml(item.gratitudeRequest)}</p>
             </section>
           `
@@ -301,7 +303,7 @@ function renderPage(editMode = false) {
                 <span>${escapeHtml(item.author)}</span>
               </a>
             `}
-          <div class="detail-meta-date">${formatDate(item.createdAt)}</div>
+          <div class="detail-meta-date"><span class="material-symbols-outlined" aria-hidden="true">schedule</span>${formatDate(item.createdAt)}</div>
         </div>
         ${isOwnPost
           ? `

@@ -224,7 +224,7 @@ function renderKitchenTimeline(state) {
             `;
 
           return `
-            <article class="timeline-entry ${entry.type === "stock" ? "stock" : "post"}">
+            <article class="timeline-entry timeline-entry-clickable ${entry.type === "stock" ? "stock" : "post"}" role="link" tabindex="0" data-post-href="${postHref}">
               <div class="timeline-entry-top">
                 <a class="timeline-entry-item" href="${postHref}">${escapeHtml(getItemDisplayName(item) || "未指定")}</a>
                 <div class="timeline-entry-chips">
@@ -334,23 +334,45 @@ if (!isKitchenMode) {
 if (isKitchenMode) {
   renderKitchenTimeline(loadState());
 
+  const moveToTimelinePost = (entryEl) => {
+    if (!entryEl) return;
+    const href = String(entryEl.getAttribute("data-post-href") || "").trim();
+    if (!href) return;
+    window.location.href = href;
+  };
+
   root.addEventListener("click", (event) => {
     const button = event.target.closest(".timeline-post-kizuna-btn");
-    if (!button) return;
+    if (button) {
+      const postId = String(button.dataset.postId || "").trim();
+      if (!postId) return;
 
-    const postId = String(button.dataset.postId || "").trim();
-    if (!postId) return;
+      const latestState = loadState();
+      const targetPost = (Array.isArray(latestState.supplies) ? latestState.supplies : []).find((item) => item.id === postId);
+      if (!targetPost) return;
+      if (isBlockedEither(latestState, user.displayName, targetPost.author)) {
+        alert("ブロック中のユーザーの投稿にはキズナできません。");
+        return;
+      }
 
-    const latestState = loadState();
-    const targetPost = (Array.isArray(latestState.supplies) ? latestState.supplies : []).find((item) => item.id === postId);
-    if (!targetPost) return;
-    if (isBlockedEither(latestState, user.displayName, targetPost.author)) {
-      alert("ブロック中のユーザーの投稿にはキズナできません。");
+      togglePostKizuna(latestState, user.displayName, "supply", postId);
+      saveState(latestState);
+      renderKitchenTimeline(latestState);
       return;
     }
 
-    togglePostKizuna(latestState, user.displayName, "supply", postId);
-    saveState(latestState);
-    renderKitchenTimeline(latestState);
+    const entryEl = event.target.closest(".timeline-entry-clickable");
+    if (!entryEl) return;
+    if (event.target.closest("a, button")) return;
+    moveToTimelinePost(entryEl);
+  });
+
+  root.addEventListener("keydown", (event) => {
+    const entryEl = event.target.closest(".timeline-entry-clickable");
+    if (!entryEl) return;
+    if (event.target.closest("a, button")) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    moveToTimelinePost(entryEl);
   });
 }

@@ -111,10 +111,20 @@ root.classList.remove("hidden");
 root.innerHTML = `
   ${renderHeaderHtml(user, "ユーザ詳細")}
 
-  <section class="user-detail-page">
+  <section class="board-section-container user-detail-page">
     <a class="detail-page-back" href="${backHref}"><span>&lang;</span>戻る</a>
 
-    <article class="card user-profile-card">
+    <article class="post-feed-hero user-detail-hero" aria-label="ユーザ詳細の案内">
+      <div class="post-feed-hero-icon" aria-hidden="true">
+        <span class="material-symbols-outlined">account_circle</span>
+      </div>
+      <div class="post-feed-hero-copy">
+        <p class="post-feed-hero-eyebrow">PROFILE</p>
+        <h2>ユーザ詳細</h2>
+      </div>
+    </article>
+
+    <article class="card user-profile-card user-profile-card-emphasis">
       <div class="user-profile-head">
         <div class="user-profile-avatar ${iconDataUrl ? "has-image" : ""}">
           ${iconDataUrl ? `<img src="${iconDataUrl}" alt="${escapeHtml(targetName)}のプロフィール画像" />` : `<span>${escapeHtml(initial)}</span>`}
@@ -159,7 +169,7 @@ root.innerHTML = `
     </article>
 
     <article class="card user-badge-card">
-      <h3>バッジ</h3>
+      <h3><span class="material-symbols-outlined" aria-hidden="true">workspace_premium</span>バッジ</h3>
       ${gratitudeBadges.length
         ? `
           <ul class="user-badge-grid" id="userBadgeGrid">
@@ -176,7 +186,7 @@ root.innerHTML = `
     </article>
 
     <article class="card user-recent-post-card">
-      <h3>最近の投稿</h3>
+      <h3><span class="material-symbols-outlined" aria-hidden="true">history</span>最近の投稿</h3>
       ${recentPosts.length
         ? `
           <div class="list">
@@ -187,15 +197,18 @@ root.innerHTML = `
                 <a class="list-item-link" href="${href}">
                   <article class="list-item list-item-compact">
                     <div class="row list-item-top-row">
-                      <strong class="list-item-title">${escapeHtml(item.itemName || item.title || "未指定")}</strong>
+                      <div class="list-item-title-wrap">
+                        <span class="material-symbols-outlined list-item-title-icon" aria-hidden="true">inventory_2</span>
+                        <strong class="list-item-title">${escapeHtml(item.itemName || item.title || "未指定")}</strong>
+                      </div>
                       <span class="chip list-item-category-chip">${escapeHtml(item.category || "未分類")}</span>
                     </div>
                     <div class="list-item-facts">
-                      <span class="list-fact-pill">${escapeHtml(label)}</span>
-                      <span class="list-fact-pill">${escapeHtml(item.area || "未設定")}</span>
+                      <span class="list-fact-pill"><span class="material-symbols-outlined" aria-hidden="true">deployed_code</span>${escapeHtml(label)}</span>
+                      <span class="list-fact-pill"><span class="material-symbols-outlined" aria-hidden="true">distance</span>${escapeHtml(item.area || "未設定")}</span>
                     </div>
                     <div class="list-meta-line list-meta-line-own">
-                      <div class="list-meta-date">${escapeHtml(formatDate(item.createdAt))}</div>
+                      <div class="list-meta-date"><span class="material-symbols-outlined" aria-hidden="true">schedule</span>${escapeHtml(formatDate(item.createdAt))}</div>
                     </div>
                   </article>
                 </a>

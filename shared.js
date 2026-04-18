@@ -157,6 +157,7 @@ function renderHeaderHtml(user, title) {
     { href: "./board.html", label: "ホーム", icon: "home", active: pageName === "board.html" },
     { href: "./board-list.html", label: boardLabel, icon: "format_list_bulleted", active: pageName === "board-list.html" },
     { href: "./board-my-posts.html", label: "自分の投稿", icon: "edit_square", active: pageName === "board-my-posts.html" },
+    { href: "./post.html", label: "投稿", icon: "add_box", active: pageName === "post.html" },
     { href: "./chat.html", label: "チャット", icon: "chat_bubble", active: pageName === "chat.html" || pageName === "chat-room.html" },
     ...(!isKitchen ? [{ href: "./board-map.html", label: "マップ", icon: "map", active: pageName === "board-map.html" }] : []),
     { dividerBefore: true, href: "./settings.html", label: "設定", icon: "settings", active: pageName === "settings.html" },
@@ -183,7 +184,7 @@ function renderHeaderHtml(user, title) {
             </ul>
           </nav>
         </div>
-        <h1>${title || "きずな〇〇"}</h1>
+        <h1><a class="app-title-link" href="./board.html">きずな〇〇</a></h1>
       </div>
       <span class="status-badge ${isKitchen ? "kitchen" : "provider"}">${modeText}</span>
     </header>
@@ -194,10 +195,10 @@ function renderBottomNavHtml(current, user) {
   const modeClass = user.mode === "KITCHEN" ? "kitchen" : "provider";
   return `
     <nav class="bottom-nav ${modeClass}">
-      <a href="./board.html" class="${current === "board" ? "active" : ""}">一覧</a>
-      <a href="./post.html" class="${current === "post" ? "active" : ""}">投稿</a>
-      <a href="./chat.html" class="${current === "chat" ? "active" : ""}">チャット</a>
-      <a href="./settings.html" class="${current === "settings" ? "active" : ""}">設定</a>
+      <a href="./board.html" class="${current === "board" ? "active" : ""}"><span class="bottom-nav-icon material-symbols-outlined" aria-hidden="true">home</span><span class="bottom-nav-label">ホーム</span></a>
+      <a href="./post.html" class="${current === "post" ? "active" : ""}"><span class="bottom-nav-icon material-symbols-outlined" aria-hidden="true">add_box</span><span class="bottom-nav-label">投稿</span></a>
+      <a href="./chat.html" class="${current === "chat" ? "active" : ""}"><span class="bottom-nav-icon material-symbols-outlined" aria-hidden="true">chat_bubble</span><span class="bottom-nav-label">チャット</span></a>
+      <a href="./settings.html" class="${current === "settings" ? "active" : ""}"><span class="bottom-nav-icon material-symbols-outlined" aria-hidden="true">settings</span><span class="bottom-nav-label">設定</span></a>
     </nav>
   `;
 }
