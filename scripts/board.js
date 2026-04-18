@@ -185,9 +185,18 @@ function renderKitchenTimeline(state) {
   const entries = buildKitchenTimelineEntries(state, user.displayName);
   if (!entries.length) {
     host.innerHTML = `
-      <section class="board-follow-timeline">
-        <h2 class="board-follow-timeline-title">タイムライン</h2>
-        <p class="sub">投稿はまだありません。</p>
+      <section class="board-follow-timeline board-follow-timeline-empty" aria-label="タイムライン">
+        <div class="board-follow-timeline-head">
+          <h2 class="board-follow-timeline-title">タイムライン</h2>
+        </div>
+        <article class="timeline-empty-state" role="status" aria-live="polite">
+          <div class="timeline-empty-icon" aria-hidden="true">
+            <span class="material-symbols-outlined">tips_and_updates</span>
+          </div>
+          <p class="timeline-empty-title">まだタイムラインがありません</p>
+          <p class="timeline-empty-sub">フォロー中の新着投稿や在庫の変化がここに表示されます。</p>
+          <a class="timeline-empty-link" href="./board-list.html">投稿一覧を見る</a>
+        </article>
       </section>
     `;
     return;
