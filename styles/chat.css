@@ -19,6 +19,7 @@
 
 .chat-room-item {
   width: 100%;
+  min-width: 0;
   border: 1px solid #e7d8c2;
   border-bottom-color: #dfcfb7;
   border-radius: 14px;
@@ -85,10 +86,19 @@
   gap: 8px;
 }
 
+.chat-room-top strong {
+  min-width: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .chat-room-top small {
   color: var(--muted);
   white-space: nowrap;
   font-size: 0.76rem;
+  flex: 0 0 auto;
 }
 
 .chat-preview {

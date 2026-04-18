@@ -114,6 +114,7 @@ function renderRoom() {
           </a>
           <span class="chat-room-honorific">さん</span>
         </div>
+        <p class="chat-room-guideline">相手を尊重し、思いやりのある言葉で会話しましょう。</p>
       </header>
 
       <div class="chat-thread" id="chatList"></div>

@@ -53,6 +53,24 @@ root.innerHTML = `
       <label><span class="post-label-title"><span class="material-symbols-outlined" aria-hidden="true">distance</span>エリア</span><input id="postArea" placeholder="例: 横浜市港北区" required /></label>
       ${!isKitchen ? '<label><span class="post-label-title"><span class="material-symbols-outlined" aria-hidden="true">redeem</span>支援後に受け取りたいお礼</span><textarea id="postGratitudeRequest" rows="2" placeholder="例: 活動写真、子どもたちからのメッセージ"></textarea></label>' : ""}
       <label><span class="post-label-title"><span class="material-symbols-outlined" aria-hidden="true">notes</span>補足メモ</span><textarea id="postNote" rows="3" placeholder="引き取り可能時間など"></textarea></label>
+      ${!isKitchen
+        ? `<fieldset class="post-confirmations" aria-describedby="postConfirmationHelp">
+            <legend class="post-confirmations-title">投稿前の確認事項（必須）</legend>
+            <p id="postConfirmationHelp" class="post-confirmations-help">投稿前に以下をご確認ください。</p>
+            <label class="post-confirmation-item">
+              <input id="confirmFreshness" type="checkbox" />
+              <span>鮮度管理が必要な物資の場合、保管状態や受け渡し期限を確認しました</span>
+            </label>
+            <label class="post-confirmation-item">
+              <input id="confirmShipping" type="checkbox" />
+              <span>送料は可能な限り提供者側で負担する方針に同意します</span>
+            </label>
+            <label class="post-confirmation-item">
+              <input id="confirmDescription" type="checkbox" />
+              <span>数量・状態・受け渡し条件を正確に記載したことを確認しました</span>
+            </label>
+          </fieldset>`
+        : ""}
       <p id="postError" class="error hidden"></p>
       <button type="submit" class="btn post-submit-btn ${isKitchen ? "kitchen-bg" : "provider-bg"}"><span class="material-symbols-outlined" aria-hidden="true">send</span>投稿</button>
     </form>
@@ -71,6 +89,9 @@ document.getElementById("postForm").addEventListener("submit", (e) => {
   const area = document.getElementById("postArea").value.trim();
   const gratitudeRequest = isKitchen ? "" : document.getElementById("postGratitudeRequest")?.value.trim() || "";
   const note = document.getElementById("postNote").value.trim();
+  const freshnessConfirmed = isKitchen ? true : Boolean(document.getElementById("confirmFreshness")?.checked);
+  const shippingConfirmed = isKitchen ? true : Boolean(document.getElementById("confirmShipping")?.checked);
+  const descriptionConfirmed = isKitchen ? true : Boolean(document.getElementById("confirmDescription")?.checked);
   const err = document.getElementById("postError");
 
   if (!itemName) {
@@ -103,6 +124,12 @@ document.getElementById("postForm").addEventListener("submit", (e) => {
     return;
   }
 
+  if (!isKitchen && (!freshnessConfirmed || !shippingConfirmed || !descriptionConfirmed)) {
+    err.textContent = "投稿前の確認事項にすべてチェックしてください";
+    err.classList.remove("hidden");
+    return;
+  }
+
   err.classList.add("hidden");
 
   const state = loadState();
@@ -117,6 +144,11 @@ document.getElementById("postForm").addEventListener("submit", (e) => {
     area,
     gratitudeRequest,
     note,
+    confirmations: {
+      freshnessConfirmed,
+      shippingConfirmed,
+      descriptionConfirmed,
+    },
     author: user.displayName,
     createdAt: new Date().toISOString(),
   };

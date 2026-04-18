@@ -1954,6 +1954,44 @@
   min-height: 92px;
 }
 
+.post-confirmations {
+  margin: 0.5rem 0;
+  border: 1px solid #ead9c1;
+  border-radius: 12px;
+  background: #fffaf2;
+  padding: 0.7rem 0.75rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.post-confirmations-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #6f5120;
+  padding: 0;
+}
+
+.post-confirmations-help {
+  margin: 0 0 0 0.25rem;
+  font-size: 0.82rem;
+  color: #7b6442;
+}
+
+.post-confirmation-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  color: #4b3f2b;
+}
+
+.post-confirmation-item input[type="checkbox"] {
+  margin-top: 0.15rem;
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+}
+
 @keyframes post-card-rise {
   from {
     transform: translateY(6px);
