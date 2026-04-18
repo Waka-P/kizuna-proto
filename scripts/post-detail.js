@@ -144,15 +144,24 @@ function renderPage(editMode = false) {
   if (isOwnPost && editMode) {
     const quantityAmount = getItemQuantityNumber(item);
     const quantityUnit = getItemQuantityUnit(item);
+    const endpointText = type === "supply" ? "余剰物資投稿" : "ニーズ投稿";
 
     root.innerHTML = `
       ${renderDetailHeaderHtml("投稿編集")}
 
-      <section>
+      <section class="board-section-container post-compose-page">
         <a class="detail-page-back" href="${backHref}"><span>&lang;</span>一覧へ戻る</a>
-        <form class="card post-edit-form" id="editPostForm">
-          <h2>自分の投稿を編集</h2>
-          <label>物資名<input id="editItemName" value="${escapeHtml(getItemDisplayName(item))}" required /></label>
+        <form class="card post-compose-form post-edit-form" id="editPostForm">
+          <div class="post-compose-hero">
+            <div class="post-compose-hero-icon" aria-hidden="true">
+              <span class="material-symbols-outlined">edit_square</span>
+            </div>
+            <div>
+              <p class="post-compose-eyebrow">EDIT POST</p>
+              <h2>${endpointText}</h2>
+            </div>
+          </div>
+          <label><span class="post-label-title"><span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>物資名</span><input id="editItemName" value="${escapeHtml(getItemDisplayName(item))}" required /></label>
           <label>数量
             <div class="quantity-input-row">
               <input id="editQuantityAmount" type="number" min="1" step="1" inputmode="numeric" value="${escapeHtml(quantityAmount ? String(quantityAmount) : "")}" required />
@@ -167,13 +176,13 @@ function renderPage(editMode = false) {
               ${CATEGORIES.map((category) => `<option value="${category}" ${item.category === category ? "selected" : ""}>${category}</option>`).join("")}
             </select>
           </label>
-          <label>エリア<input id="editArea" value="${escapeHtml(item.area || "")}" required /></label>
-          ${type === "supply" ? `<label>支援後に受け取りたいお礼<textarea id="editGratitudeRequest" rows="3" placeholder="例: 活動写真、子どもたちからのメッセージ">${escapeHtml(item.gratitudeRequest || "")}</textarea></label>` : ""}
-          <label>メモ<textarea id="editNote" rows="4">${escapeHtml(item.note || "")}</textarea></label>
+          <label><span class="post-label-title"><span class="material-symbols-outlined" aria-hidden="true">distance</span>エリア</span><input id="editArea" value="${escapeHtml(item.area || "")}" required /></label>
+          ${type === "supply" ? `<label><span class="post-label-title"><span class="material-symbols-outlined" aria-hidden="true">redeem</span>支援後に受け取りたいお礼</span><textarea id="editGratitudeRequest" rows="2" placeholder="例: 活動写真、子どもたちからのメッセージ">${escapeHtml(item.gratitudeRequest || "")}</textarea></label>` : ""}
+          <label><span class="post-label-title"><span class="material-symbols-outlined" aria-hidden="true">notes</span>補足メモ</span><textarea id="editNote" rows="3">${escapeHtml(item.note || "")}</textarea></label>
           <p id="editError" class="error hidden"></p>
           <div class="detail-actions-row">
             <button type="button" id="cancelEditBtn" class="cancel-btn ghost">キャンセル</button>
-            <button type="submit" class="btn save-btn ${modeButtonClass}">保存</button>
+            <button type="submit" class="btn post-submit-btn save-btn ${modeButtonClass}"><span class="material-symbols-outlined" aria-hidden="true">save</span>保存</button>
           </div>
         </form>
       </section>

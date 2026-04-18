@@ -15,7 +15,11 @@ const root = document.getElementById("loginView");
 root.classList.remove("hidden");
 root.innerHTML = `
   <h1>きずな〇〇</h1>
-  <p class="sub">プロトタイプです。データはブラウザ内に保存されます。</p>
+  <p class="sub">
+    プロトタイプです。データはブラウザ内に保存されます。<br />
+    ログイン・新規登録方法は未定です。<br />
+    とりあえず表示名を入力して「はじめる」を押してください。
+  </p>
   <form id="loginForm" class="card">
     <label>
       表示名
