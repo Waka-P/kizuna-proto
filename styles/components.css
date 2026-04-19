@@ -184,6 +184,7 @@
   align-items: center;
   text-decoration: none;
   padding: 0.45rem 1.5rem;
+  font-size: 0.9rem;
 }
 
 .request-btn {
@@ -609,6 +610,11 @@
   min-height: 88px;
 }
 
+.settings-profile-form #profileSaved {
+  color: #1f8f44;
+  font-weight: 700;
+}
+
 .settings-primary-btn,
 .settings-main-action,
 .settings-inline-action {
@@ -817,7 +823,7 @@
 .header-left-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.5rem;
   min-width: 0;
 }
 
@@ -849,7 +855,8 @@ body.header-menu-open {
   flex-direction: column;
   justify-content: center;
   gap: 5px;
-  padding: 0 9px;
+  margin-bottom: 0.1rem;
+  padding: 0 0.8rem 0 2px;
 }
 
 .header-menu-icon span {

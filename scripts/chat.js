@@ -46,7 +46,7 @@ if (!summaries.length) {
   listEl.innerHTML = `
     <article class="card post-feed-empty chat-empty-card">
       <span class="material-symbols-outlined" aria-hidden="true">forum</span>
-      <p class="sub">チャット相手がまだいません。投稿すると候補が表示されます。</p>
+      <p class="sub">チャット相手がまだいません。</p>
     </article>
   `;
 } else {

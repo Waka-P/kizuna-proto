@@ -130,10 +130,16 @@ root.innerHTML = `
           ${iconDataUrl ? `<img src="${iconDataUrl}" alt="${escapeHtml(targetName)}のプロフィール画像" />` : `<span>${escapeHtml(initial)}</span>`}
         </div>
         <div class="user-profile-main">
-          <h2>${escapeHtml(targetName)}</h2>
+          <div class="user-profile-title-row">
+            <h2>
+              <button id="userNameScrollBtn" class="user-name-scroll-btn" type="button" aria-label="ユーザー名をスクロールして表示">
+                ${escapeHtml(targetName)}
+              </button>
+            </h2>
+            <div class="user-status-badge ${modeClass}">${escapeHtml(modeText)}</div>
+          </div>
           <p class="sub user-address ${modeClass}"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>${escapeHtml(profile?.address || "住所未設定")}</span></p>
         </div>
-        <div class="user-status-badge ${modeClass}">${escapeHtml(modeText)}</div>
       </div>
 
       <div class="user-profile-meta">
@@ -277,6 +283,80 @@ root.innerHTML = `
 
   ${renderBottomNavHtml("board", user)}
 `;
+
+function setupUserNameScroll() {
+  const userNameScrollBtn = document.getElementById("userNameScrollBtn");
+  if (!(userNameScrollBtn instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  let resetTimer = 0;
+  let rafId = 0;
+
+  function resetScrollState() {
+    window.clearTimeout(resetTimer);
+    if (rafId) {
+      window.cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
+    userNameScrollBtn.classList.remove("is-animating");
+    userNameScrollBtn.scrollLeft = 0;
+  }
+
+  function refreshOverflowState() {
+    const overflowWidth = Math.max(0, userNameScrollBtn.scrollWidth - userNameScrollBtn.clientWidth);
+    userNameScrollBtn.dataset.overflow = String(overflowWidth);
+    userNameScrollBtn.classList.toggle("is-scrollable", overflowWidth > 1);
+    if (overflowWidth <= 1) {
+      resetScrollState();
+    }
+  }
+
+  userNameScrollBtn.addEventListener("click", () => {
+    const overflowWidth = Number(userNameScrollBtn.dataset.overflow || 0);
+    if (!overflowWidth) return;
+
+    resetScrollState();
+
+    // 長い名前ほどゆっくり流れるように距離に比例して時間を伸ばす
+    const duration = Math.max(1000, Math.min(6000, Math.round(overflowWidth * 22)));
+    const holdAtEnd = 500;
+    userNameScrollBtn.style.setProperty("--name-scroll-duration", `${duration}ms`);
+
+    userNameScrollBtn.classList.add("is-animating");
+
+    const startAt = performance.now();
+    const startScroll = 0;
+
+    function step(now) {
+      const elapsed = now - startAt;
+      const ratio = Math.min(1, elapsed / duration);
+      userNameScrollBtn.scrollLeft = startScroll + overflowWidth * ratio;
+
+      if (ratio < 1) {
+        rafId = window.requestAnimationFrame(step);
+        return;
+      }
+      rafId = 0;
+    }
+
+    rafId = window.requestAnimationFrame(step);
+
+    resetTimer = window.setTimeout(() => {
+      userNameScrollBtn.scrollLeft = 0;
+      userNameScrollBtn.classList.remove("is-animating");
+    }, duration + holdAtEnd);
+  });
+
+  window.addEventListener("resize", () => {
+    resetScrollState();
+    refreshOverflowState();
+  });
+
+  refreshOverflowState();
+}
+
+setupUserNameScroll();
 
 if (!isSelf) {
   const kizunaToggleBtn = document.getElementById("kizunaToggleBtn");

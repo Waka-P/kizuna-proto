@@ -54,11 +54,53 @@
   display: grid;
   gap: 0.3rem;
   min-width: 0;
+  flex: 1;
+}
+
+.user-profile-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
 }
 
 .user-profile-main h2 {
   padding: 0.25rem 0 0;
-  overflow-wrap: anywhere;
+  margin: 0;
+  min-width: 0;
+}
+
+.user-name-scroll-btn {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  line-height: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.user-name-scroll-btn.is-scrollable {
+  cursor: pointer;
+}
+
+.user-name-scroll-btn:focus-visible {
+  outline: 2px solid #b39045;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.user-name-scroll-btn.is-animating {
+  text-overflow: clip;
 }
 
 .user-address {
@@ -361,7 +403,7 @@
   padding: 4px 0.9rem;
   border: 1px solid transparent;
   white-space: nowrap;
-  margin-top: 0.3rem;
+  margin: 0 0 0 auto;
 }
 
 .user-status-badge.unknown {
@@ -384,14 +426,6 @@
 @media (max-width: 480px) {
   .user-profile-head {
     flex-wrap: wrap;
-  }
-
-  .user-profile-main {
-    flex: 1;
-  }
-
-  .user-status-badge {
-    margin: 0 0 0 auto;
   }
 
   .user-action-top-row {
